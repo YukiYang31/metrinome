@@ -46,7 +46,8 @@ jobs:
         run: docker build -t apcmetrinome/develop:ci -f src/Dockerfile .
       - name: Build the replication image
         run: docker build -t apcmetrinome/dockerapc:ci -f replication/Dockerfile .
-      - name: Convert C and Java and compute metrics inside the development image
+      - name: Convert C and Java, compute metrics, and run KLEE inside the development image
         run: >
-          docker run --rm -v "$PWD/src:/app/code" apcmetrinome/develop:ci
-          python3 -m unittest tests.test_bounded_paths tests.test_frontends -v
+          docker run --rm -v "$PWD/src:/app/code" apcmetrinome/develop:ci bash -c
+          "klee --version && python3 -c 'from tests.test_klee import klee_available; assert klee_available()'
+          && python3 -m unittest tests.test_bounded_paths tests.test_frontends tests.test_klee -v"

@@ -1,5 +1,6 @@
 """Script for running Klee on a series of functions and saving data."""
 
+import os
 import subprocess
 import sys
 from subprocess import PIPE
@@ -41,7 +42,7 @@ class KleeExperimentHandler:
         For each function, runs Klee once with each maximum depth,
         saves the data as a csv, and creates a graph for each field.
         """
-        subprocess.run(f"mkdir {self.c_files_dir}/frames/", shell=True, check=False)
+        os.makedirs(f"{self.c_files_dir}/frames", exist_ok=True)
         list(map(self.klee_experiment, get_functions_list()))
 
     def klee_compare(self, file_name: str, function: str,
@@ -60,7 +61,7 @@ class KleeExperimentHandler:
                 output_file = output_file.replace(" ", "_")
                 results = klee_with_opts(file_name, output_file, self.pref, depth, False, input_)
                 stats_params = "--table-format=simple --print-all"
-                stats = subprocess.run(f"{Env.KLEE_PATH}-stats {stats_params} {output_file}",
+                stats = subprocess.run(f"{Env.klee('klee-stats')} {stats_params} {output_file}",
                                        shell=True, stdout=PIPE, stderr=PIPE, check=True)
                 if remove:
                     subprocess.run(f"rm -rf {output_file}", shell=True, check=False)
@@ -108,8 +109,7 @@ class KleeExperimentHandler:
     def graph_stat(self, func: str, preference: str, results: KleeCompareResults,
                    results2: Optional[KleeCompareResults], field: str) -> None:
         """Create and save a graph for a certain statistic on a Klee experiment."""
-        subprocess.run(f"mkdir {Env.PROJECT_PATH}/tests/cFiles/fse_2020_benchmark/graphs/",
-                       shell=True, check=False)
+        os.makedirs(f"{self.c_files_dir}/graphs", exist_ok=True)
         fig1, ax1 = plt.subplots()
         depths = list(map(float, self.max_depths))
         for input_ in self.inputs:
@@ -155,8 +155,7 @@ def main() -> None:
         max_depths = list(map(str, range(1, 21))) + list(map(str, range(30, 110, 10)))
         KleeExperimentHandler(opts, max_depths).run_experiment()
     elif sys.argv[1] == "time_test":
-        subprocess.run(f"mkdir {Env.PROJECT_PATH}/tests/cFiles/fse_2020_benchmark/frames_time/",
-                       shell=True, check=False)
+        os.makedirs(Env.project_file("tests/cFiles/fse_2020_benchmark/frames_time"), exist_ok=True)
         handler = KleeExperimentHandler("--dump-states-on-halt=false", [])
         handler.run_klee_time("32_newtons_method", list(map(str, range(1, 16))))
 

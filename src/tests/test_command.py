@@ -1,4 +1,7 @@
 """Test the commands of the REPL."""
+import os
+import shutil
+import tempfile
 import unittest
 from typing import Union, cast
 
@@ -9,7 +12,7 @@ from core.env import Env
 from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph as CFG
 from graph.graph import EdgeListGraph, EdgeListType
-from tests.unit_utils import captured_output
+from tests.unit_utils import captured_output, use_private_temp_dirs
 
 # pylint does not understand decorators :(
 # pylint: disable=no-value-for-parameter
@@ -274,18 +277,17 @@ class TestCommand(unittest.TestCase):
         # self.command.do_mv("")
 
     # ==== Test do_convert =====
-    def test_convert_valid_type(self) -> None:
-        """
-        Test convert command with a file of source code.
+    def test_convert_directory(self) -> None:
+        """Converting a directory converts its supported files and skips the rest."""
+        use_private_temp_dirs(self)
+        with tempfile.TemporaryDirectory() as directory:
+            shutil.copy(Env.project_file("tests/fixtures/switch4.c"), directory)
+            with open(os.path.join(directory, "README"), "w") as readme:
+                readme.write("not source code")
+            with captured_output():
+                self.command.do_convert(directory)
 
-        See if we can convert a file containing source code of a type
-        we recognize to a Graph representing its control flow.
-        """
-        with captured_output() as (out, err):
-            # self.command.do_convert("testfile.py") # TODO
-            pass
-
-    # TODO: convert recursive
+        self.assertEqual(["switch4_.classify.dot"], list(self.command.data.graphs))
 
     # === Test do_metrics ===
     def test_do_metrics_valid(self) -> None:

@@ -1,4 +1,5 @@
 """Script for running Klee on a series of functions and saving data."""
+import os
 import subprocess
 from subprocess import PIPE
 from typing import Optional, Union
@@ -32,7 +33,7 @@ def klee_compare_time(file_name: str, preferences: list[str], max_times: list[st
             output_file = output_file.replace(" ", "_")
             results = klee_with_opts(file_name, output_file, preference, max_time, True)
             stats_params = "--table-format=simple --print-all"
-            stats = subprocess.run(f"{Env.KLEE_PATH}-stats {stats_params} {output_file}",
+            stats = subprocess.run(f"{Env.klee('klee-stats')} {stats_params} {output_file}",
                                    shell=True, stdout=PIPE, stderr=PIPE, check=True)
             if remove:
                 subprocess.run(f"rm -rf {output_file}", shell=True, check=False)
@@ -49,7 +50,7 @@ def graph_stat_time(func: str, preference: str, max_times: list[str], results: K
                     field: str) -> None:
     """Create and save a graph for a certain statistic on a Klee experiment."""
     algs_path = Env.project_file("tests/cFiles/fse_2020_benchmark")
-    subprocess.run(f"mkdir {algs_path}/graphs_time/", shell=True, check=False)
+    os.makedirs(f"{algs_path}/graphs_time", exist_ok=True)
     fig1, ax1 = plt.subplots()
     stats = [results[(preference, i)][field] for i in max_times]
     ax1.plot([float(i) for i in max_times], stats, label=func)

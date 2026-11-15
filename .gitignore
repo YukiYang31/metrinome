@@ -9,6 +9,7 @@ src/.mypy_cache/
 /src/exports/*
 /src/tmp/
 /src/tmp_dot/
+/src/klee_out/
 /src/.coverage
 /src/coverage.xml
 /src/htmlcov/

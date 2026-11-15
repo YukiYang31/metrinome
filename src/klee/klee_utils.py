@@ -1,8 +1,8 @@
 """Handles work with klee, which does symbollic execution and test generation of C code."""
 
+import os
 import re
 import subprocess
-import uuid
 from collections import defaultdict
 from subprocess import PIPE
 from time import time
@@ -26,18 +26,18 @@ def klee_with_opts(file_name: str, output_name: str, preferences: str, max_val: 
                    max_time: bool, input_: str = "") -> KleeOutputPreferencesInfo:
     """Run and Klee with specified parameters and return several statistics."""
     with open(file_name, "rb+"):
-        timeconfig = r"export TIMEFMT=$'real\t%E\nuser\t%U\nsys\t%S'; "
+        timeconfig = r"TIMEFORMAT=$'real\t%Rs\nuser\t%Us\nsys\t%Ss'; "
 
         if max_time:
             cmd_params = f"-output-dir={output_name} --max-time={max_val}min"
-            cmd = f"time {Env.KLEE_PATH} {preferences} {cmd_params} {file_name}"
+            cmd = f"time {Env.klee()} {preferences} {cmd_params} {file_name}"
         else:
             cmd_params = f"-output-dir={output_name} -max-depth {max_val}"
-            cmd = f"time {Env.KLEE_PATH} {preferences} {cmd_params} {file_name} {input_}"
+            cmd = f"time {Env.klee()} {preferences} {cmd_params} {file_name} {input_}"
 
         start_time = time()
         res = subprocess.run(timeconfig + cmd, shell=True, check=False,
-                             executable="/usr/bin/zsh", stdout=PIPE, stderr=PIPE)
+                             executable="/bin/bash", stdout=PIPE, stderr=PIPE)
         final_time = time() - start_time
         return (*parse_klee(res.stderr.decode()), final_time)
 
@@ -62,8 +62,8 @@ def parse_klee(klee_output: str) -> KleeOutputInfo:
 
 
 def klee_cmd(bcname: str, new_name: str) -> str:
-    """Get the KLEE command as a string."""
-    return f"{Env.clang()} -I {Env.KLEE_INCLUDE} -emit-llvm -c -g\
+    """Get the command compiling a KLEE harness to bitcode as a string."""
+    return f"{Env.klee_clang()} -I {Env.klee_include()} -emit-llvm -c -g\
              -O0 -Xclang -disable-O0-optnone  -o {bcname} {new_name}"
 
 
@@ -166,23 +166,23 @@ class KleeUtils:
         to work with klee.
         """
         self._logger.d_msg(f"Going to parse file {filename}")
+        # pycparser does not parse GCC attributes; the harness still #includes the original source,
+        # so clang compiles the real attributes.
+        cppargs = ['-nostdinc', '-E', '-D__attribute__(x)=', f'-I{Env.fake_libc_include()}']
         if optimized:
-            cppargs = ['-O3', '-nostdinc', '-E', f'-I{Env.fake_libc_include()}']
-        else:
-            cppargs = ['-nostdinc', '-E', f'-I{Env.fake_libc_include()}']
+            cppargs.insert(0, '-O3')
         ast = parse_file(filename, use_cpp=True, cpp_path='gcc', cpp_args=cppargs)
         self._logger.d_msg("Going to visit functions.")
         func_visitor = FuncVisitor(self._logger)
         func_visitor.visit(ast)
 
-        uuids: set[uuid.UUID] = set()
         klee_formatted_files = dict()
         for func_name in func_visitor.vars.keys():
             variables = [list(v) for v in func_visitor.vars[func_name]]
             var_names = []
 
             file_str = "#include <klee/klee.h>\n"
-            file_str += f"#include <{filename}>\n"
+            file_str += f"#include \"{os.path.abspath(filename)}\"\n"
             file_str += f"#define SIZE {size}\n"
             file_str += "int main() {\n"
             for var in variables:
@@ -190,14 +190,7 @@ class KleeUtils:
                     var[0] = var[0].replace("[]", "[SIZE]")
 
                 file_str += f"\n\t{var[0]}"
-
-                name = uuid.uuid4()
-                while name in uuids:
-                    name = uuid.uuid4()
-                uuids.add(name)
-
-                file_str += f"\tklee_make_symbolic(&{var[1]}," + \
-                            f" sizeof({var[1]}), \"{str(name).replace('-', '')}\");\n"
+                file_str += f"\tklee_make_symbolic(&{var[1]}, sizeof({var[1]}), \"{var[1]}\");\n"
 
                 var_names.append(var[1])
 

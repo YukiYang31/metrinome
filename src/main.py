@@ -12,6 +12,7 @@ from typing import Any
 
 import core.command as command
 from core.command import Options, REPLOptions
+from core.env import ToolNotFoundError
 from core.log import Colors, Log
 from metric.bounded_paths import DEFAULT_PATH_LENGTH
 
@@ -193,7 +194,10 @@ class Prompt(Cmd):
         def cmd(args: str) -> None:
             flags, f_args, valid_args = Prompt.check_args(command_name, args, prompt.logger)
             if valid_args:
-                wrapped_func(flags, *f_args)
+                try:
+                    wrapped_func(flags, *f_args)
+                except ToolNotFoundError as err:
+                    prompt.logger.e_msg(str(err))
 
         # Create the do_<command_name> function in Prompt.
         cmd.__doc__ = wrapped_func.__doc__
@@ -222,7 +226,7 @@ class Prompt(Cmd):
         if len(args_list) > num_args:
             if check_recursive:
                 recursive_flag = args_list[0] == "-r" or args_list[0] == "--recursive"
-                if not var_args and len(args) == num_args + 1 and recursive_flag:
+                if not var_args and len(args_list) == num_args + 1 and recursive_flag:
                     return Options(True), args_list[1:], True
 
                 if var_args and recursive_flag:

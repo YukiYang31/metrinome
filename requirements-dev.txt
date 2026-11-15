@@ -1,9 +1,10 @@
-# Tests, analysis scripts under src/experiments and src/analyze, and linters (src/Makefile).
+# Tests, analysis scripts under src/experiments, src/analyze and src/klee, and linters (src/Makefile).
 -r requirements.txt
 coverage
 matplotlib
 requests
 scipy
+tabulate  # klee-stats, used by the src/klee experiments
 mypy
 pycodestyle
 pydocstyle

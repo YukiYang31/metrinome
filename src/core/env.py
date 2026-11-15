@@ -8,8 +8,11 @@ overridden with an environment variable:
     METRINOME_CLANG  clang executable (default: ``clang``, else the newest ``clang-NN`` on PATH)
     METRINOME_OPT    LLVM ``opt`` (default: the ``opt`` next to the selected clang, else PATH)
     JAVA_HOME        JDK used for ``javac``/``java`` (default: PATH)
-    METRINOME_KLEE   KLEE executable (default: ``/app/build/bin/klee``)
-    METRINOME_KLEE_INCLUDE  KLEE headers (default: ``/app/klee/include``)
+    METRINOME_KLEE   KLEE executable (default: ``klee`` on PATH); ``klee-stats``, ``ktest-tool`` and
+                     ``libkleeRuntest`` are taken from the same installation
+    METRINOME_KLEE_INCLUDE  KLEE headers (default: ``include`` of the KLEE installation)
+    METRINOME_KLEE_CLANG  clang for KLEE bitcode (default: ``clang-N`` or the selected clang, where N
+                     is KLEE's LLVM version; KLEE cannot read bitcode from a newer LLVM)
     METRINOME_FAKE_LIBC  pycparser fake libc headers (default: the ``pycparser-fake-libc`` package)
 """
 import os
@@ -51,6 +54,13 @@ def _require(path: Optional[str], tool: str, hint: str) -> str:
     return path
 
 
+def _llvm_major(executable: str) -> Optional[int]:
+    """LLVM major version printed by `executable --version` (clang or KLEE)."""
+    output = subprocess.run([executable, "--version"], capture_output=True, text=True, check=False).stdout
+    match = re.search(r"(?:clang|LLVM) version (\d+)", output)
+    return int(match.group(1)) if match else None
+
+
 class Env:
     """Project paths and external tool locations."""
 
@@ -58,10 +68,9 @@ class Env:
     TMP_PATH = join(PROJECT_PATH, "tmp")
     TMP_DOT_PATH = join(PROJECT_PATH, "tmp_dot")
     EXPORT_PATH = join(PROJECT_PATH, "exports")
+    KLEE_OUT_PATH = join(PROJECT_PATH, "klee_out")
     CFG_EXTRACTOR_JAR = join(PROJECT_PATH, "lang_to_cfg", "javaextractor", "cfg_extractor",
                              "javaextractor.jar")
-    KLEE_PATH = os.environ.get("METRINOME_KLEE", "/app/build/bin/klee")
-    KLEE_INCLUDE = os.environ.get("METRINOME_KLEE_INCLUDE", "/app/klee/include")
 
     @staticmethod
     def project_file(path: str) -> str:
@@ -112,6 +121,60 @@ class Env:
             pycparser_fake_libc = None
         return _require(getattr(pycparser_fake_libc, "directory", None), "pycparser fake libc headers",
                         "Install them with `pip install pycparser-fake-libc` or set METRINOME_FAKE_LIBC.")
+
+    @staticmethod
+    @cache
+    def klee(tool: str = "klee") -> str:
+        """Path of a KLEE tool (`klee`, `klee-stats`, `ktest-tool`), from METRINOME_KLEE's directory or PATH."""
+        if override := os.environ.get("METRINOME_KLEE"):
+            klee = shutil.which(override) or override
+            path: Optional[str] = klee if tool == "klee" else join(dirname(klee), tool)
+            if not isfile(path):
+                path = shutil.which(tool)
+        else:
+            path = shutil.which(tool)
+        return _require(path, tool, "Install KLEE (3.0 or newer) or set METRINOME_KLEE.")
+
+    @staticmethod
+    @cache
+    def klee_include() -> str:
+        """Directory containing klee/klee.h, from METRINOME_KLEE_INCLUDE or the KLEE installation."""
+        if override := os.environ.get("METRINOME_KLEE_INCLUDE"):
+            return override
+        include = join(dirname(dirname(realpath(Env.klee()))), "include")
+        return _require(include if isfile(join(include, "klee", "klee.h")) else None, "KLEE headers",
+                        "Set METRINOME_KLEE_INCLUDE to the directory containing klee/klee.h.")
+
+    @staticmethod
+    @cache
+    def klee_lib() -> str:
+        """Directory containing libkleeRuntest, in the KLEE installation or build tree."""
+        prefix = dirname(dirname(realpath(Env.klee())))
+        found = next((join(prefix, lib) for lib in ("lib", "lib64")
+                      if isfile(join(prefix, lib, "libkleeRuntest.so"))), None)
+        return _require(found, "libkleeRuntest", f"Expected it in {prefix}/lib or {prefix}/lib64.")
+
+    @staticmethod
+    @cache
+    def klee_clang() -> str:
+        """clang producing bitcode KLEE can read: METRINOME_KLEE_CLANG, clang-N, or clang if not newer."""
+        if override := os.environ.get("METRINOME_KLEE_CLANG"):
+            return shutil.which(override) or override
+        klee_llvm = _llvm_major(Env.klee())
+        if klee_llvm is None:
+            return Env.clang()
+        if versioned := shutil.which(f"clang-{klee_llvm}"):
+            return versioned
+        try:
+            clang: Optional[str] = Env.clang()
+        except ToolNotFoundError:
+            clang = None
+        clang_llvm = _llvm_major(clang) if clang else None
+        if clang and clang_llvm is not None and clang_llvm <= klee_llvm:
+            return clang
+        found = f"{clang} is LLVM {clang_llvm}" if clang else "no clang was found"
+        raise ToolNotFoundError(f"KLEE uses LLVM {klee_llvm} and cannot read bitcode from newer LLVM; "
+                                f"{found}. Install clang-{klee_llvm} or set METRINOME_KLEE_CLANG.")
 
     @staticmethod
     def clean_temps() -> None:
