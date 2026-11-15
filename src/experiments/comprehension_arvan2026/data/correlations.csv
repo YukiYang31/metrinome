@@ -1,0 +1,7 @@
+measure,java,c,student_proxy
+cyclo,0.0,0.0412,
+npath,0.3273,0.4728,
+apc_rank,0.0714,0.2143,
+student_time_output,,,0.8571
+student_readTime,,,0.5
+student_scaleSM,,,0.5

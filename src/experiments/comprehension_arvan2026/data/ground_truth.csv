@@ -1,0 +1,9 @@
+snippet,class,method,rank_A,rank_B,rank_C,rank_D,rank_E,expert_mean_rank,student_time_output,student_acc_output,student_readTime,student_scaleSM
+1,NamingUtilities,isValidProjectName,1,1,1,1,1,1.0,62.48,0.864,46.68,1.591
+2,HelpBuildUtils,isRemote,1,2,2,2,2,1.8,73.77,0.773,64.48,2.636
+3,CoffMachineType,isMachineTypeDefined,2,6,5,5,6,4.8,94.16,0.818,111.18,3.477
+4,AsciiString,indexOfIgnoreCase,3,4,3,4,3,3.4,126.86,0.523,81.98,2.591
+5,FileSystemUtils,deleteRecursively,2,3,4,3,4,3.2,85.32,0.818,84.55,3.25
+6,Utf8,encodedLength,5,8,8,8,7,7.2,156.61,0.273,97.07,3.773
+7,GeometryUtils,lowestPositiveRoot,4,5,6,6,5,5.2,134.82,0.659,65.09,2.114
+8,MathUtils,atan2,4,7,7,7,8,6.6,162.36,0.409,83.57,3.295
