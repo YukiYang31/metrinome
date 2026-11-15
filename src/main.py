@@ -13,6 +13,7 @@ from typing import Any
 import core.command as command
 from core.command import Options, REPLOptions
 from core.log import Colors, Log
+from metric.bounded_paths import DEFAULT_PATH_LENGTH
 
 TESTING_MODE = True
 
@@ -173,7 +174,8 @@ class Prompt(Cmd):
             debug = True
         elif arguments.strip() == "user":
             debug = False
-        options = REPLOptions(self.command.curr_path, debug, self.command.rich, self.command.multi_threaded)
+        options = REPLOptions(self.command.curr_path, debug, not self.command.rich, self.command.recursive_apc,
+                              self.command.fc_apc, self.command.multi_threaded, self.command.path_length)
         self.command = command.Command(options, self)
 
         self.command.data.graphs = graphs
@@ -255,6 +257,9 @@ def main() -> None:
     parser.add_argument('--interprocedural', dest = 'fcapc', 
                         action = 'store_true', default=False, 
                         help = 'interprocedural time!')
+    parser.add_argument('--path-length', dest='path_length', type=int, default=DEFAULT_PATH_LENGTH,
+                        help='Execution-length bound for the "paths of length <= k" metric '
+                             f'(default: {DEFAULT_PATH_LENGTH}).')
     # parser.add_argument('--multi-threaded', dest="multi_threaded", action='store_true', default=False,
     # help="Turn this on to speed up REPL functions through parallelism.")
     parsed_args = parser.parse_args()
@@ -266,7 +271,7 @@ def main() -> None:
         pass
 
     options = REPLOptions(os.getcwd(), parsed_args.debug_mode, parsed_args.poor, parsed_args.recursive_apc,
-                          parsed_args.fcapc)
+                          parsed_args.fcapc, path_length=parsed_args.path_length)
     prompt = Prompt(options)
     prompt.cmdloop(f"{Colors.TITLE.value}" + r"""
 

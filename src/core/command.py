@@ -30,7 +30,8 @@ from graph.control_flow_graph import ControlFlowGraph
 from inlining import inlining_script, inlining_script_heuristic
 from klee.klee_utils import KleeUtils
 from lang_to_cfg import converter, cpp, java, python
-from metric import cyclomatic_complexity, loc, metric, npath_complexity, path_complexity, recursive_path_complexity, fcn_call_path_complexity, fcn_call_path_complexity_naive
+from metric import (bounded_paths, cyclomatic_complexity, fcn_call_path_complexity, fcn_call_path_complexity_naive,
+                    loc, metric, npath_complexity, path_complexity, recursive_path_complexity)
 from utils import Timeout, calls_function
 
 # Temporarily disable unused arguments due to flags.
@@ -47,7 +48,7 @@ class InlineType(Enum):
 class Controller:
     """Store the file extension we know how to generate graphs for and the generators."""
 
-    def __init__(self, logger: Log) -> None:
+    def __init__(self, logger: Log, path_length: int = bounded_paths.DEFAULT_PATH_LENGTH) -> None:
         """
         Create a new instance of Controller by initializing all of the converters.
 
@@ -58,13 +59,15 @@ class Controller:
         cyclomatic = cyclomatic_complexity.CyclomaticComplexity(self.logger)
         npath = npath_complexity.NPathComplexity(self.logger)
         pathcomplexity = path_complexity.PathComplexity(self.logger)
+        bounded_path_count = bounded_paths.BoundedPathCount(self.logger, path_length)
         recursivepathcomplexity = recursive_path_complexity.RecursivePathComplexity(self.logger)
         locs = loc.LinesOfCode(self.logger)
         fc_path_complexity = fcn_call_path_complexity.FunctionCallPathComplexity(self.logger)
         fc_path_complexity_naive = fcn_call_path_complexity_naive.FunctionCallPathComplexity(self.logger)
 
-        self.metrics_generators: list[metric.MetricAbstract] = [cyclomatic, npath,
-                                                                pathcomplexity, recursivepathcomplexity, locs, fc_path_complexity_naive, fc_path_complexity]
+        self.metrics_generators: list[metric.MetricAbstract] = [cyclomatic, npath, pathcomplexity, bounded_path_count,
+                                                                recursivepathcomplexity, locs, fc_path_complexity_naive,
+                                                                fc_path_complexity]
 
         cpp_converter = cpp.CPPConvert(self.logger)
         java_converter = java.JavaConvert(self.logger)
@@ -125,8 +128,10 @@ class REPLOptions():
     multithreaded: bool
     recursive_apc: bool
     fcapc: bool
+    path_length: int
 
-    def __init__(self, curr_path: str, debug_mode: bool, poor: bool, recursive_apc: bool,  fcapc: bool, multithreaded: bool = False) -> None:
+    def __init__(self, curr_path: str, debug_mode: bool, poor: bool, recursive_apc: bool,  fcapc: bool,
+                 multithreaded: bool = False, path_length: int = bounded_paths.DEFAULT_PATH_LENGTH) -> None:
         """Initialize information about the REPL."""
         self.curr_path = curr_path
         self.debug_mode = debug_mode #flag is '--debug' or '--d'
@@ -134,6 +139,7 @@ class REPLOptions():
         self.multithreaded = multithreaded
         self.recursive_apc = recursive_apc #flag is '--recursion' or '--r'
         self.fcapc = fcapc #flag is '--interprocedural' or '--f'
+        self.path_length = path_length  # flag is '--path-length'
 
 
     def get_curr_path(self) -> str:
@@ -159,6 +165,10 @@ class REPLOptions():
     def get_fcapc(self) -> bool:
         """Return whether or not the REPL should be initialized in fcapc mode."""
         return self.fcapc
+
+    def get_path_length(self) -> int:
+        """Return the execution-length bound used by the Bounded Path Count metric."""
+        return self.path_length
 
 class CmdInfo:
     """Information about the arguments to a REPL command."""
@@ -247,7 +257,7 @@ class Command:
         if options.get_multithreaded():
             self.logger.i_msg("Multithreading Enabled")
         self.multi_threaded = options.get_multithreaded()
-        self.controller = Controller(self.logger)
+        self.controller = Controller(self.logger, options.get_path_length())
         self._klee_utils = KleeUtils(self.logger)
         self.rich = options.get_rich()
         self.data = Data(self.logger, self.rich)
@@ -256,6 +266,7 @@ class Command:
         self.debug_mode = options.get_debug_mode()
         self.recursive_apc = options.get_recursive_apc()
         self.fc_apc = options.get_fcapc()
+        self.path_length = options.get_path_length()
 
         ## Leaving this for history :)
         
@@ -650,6 +661,8 @@ class Command:
                     continue
                 if metric_generator.name() == "Cyclomatic Complexity" and self.fc_apc:
                     continue
+                if metric_generator.name() == "Bounded Path Count" and self.fc_apc:
+                    continue
                 try:
                     with Timeout(6000, "Took too long!"):
                         if metric_generator.name() == 'Function Call Path Complexity':
@@ -673,6 +686,12 @@ class Command:
                                 table.add_row(metric_generator.name(), path_out, time_out)
                             else:
                                 self.logger.v_msg(f"Got {path_out}, {time_out}")
+                        elif metric_generator.name() == "Bounded Path Count":
+                            label = f"Paths of length <= {self.path_length}"
+                            if self.rich:
+                                table.add_row(label, str(result), time_out)
+                            else:
+                                self.logger.v_msg(f" {label}: {result}, took {runtime:.3e} seconds")
                         else:
                             if self.rich:
                                 table.add_row(metric_generator.name(), str(result), time_out)

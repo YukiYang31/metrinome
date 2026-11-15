@@ -10,6 +10,7 @@ Metrinome is an all-purpose tool for working with code complexity metrics. It ca
 
 - Converters to turn C, C++, Java, and Python code into control flow graphs (CFGs)
 - Metric calculators for NPath, Cyclomatic, and (asymptotic) Path Complexity, including interprocedural and recursive path complexity
+- The exact number of paths up to a given execution length (`--path-length K`, default 50), the quantity path complexity bounds asymptotically
 - KLEE utilities to automatically analyze C++ code
 
 <img src="resources/repl_screenshot.png" height="300">
@@ -26,7 +27,7 @@ Requirements:
 
 ```bash
 pip install -r requirements.txt
-python3 src/main.py            # start the REPL; flags: --interprocedural, --recursion, --poor, --debug
+python3 src/main.py            # start the REPL; flags: --interprocedural, --recursion, --path-length K, --poor, --debug
 ```
 
 Inside the REPL, for example:

@@ -74,12 +74,14 @@ class Data:
                 file.write(str(metric_value))
                 self.logger.i_msg(f"Made file {new_name}_metrics in {Env.EXPORT_PATH}/")
         elif name == "*":
+            columns = {"apc": "Path Complexity", "cyclo": "Cyclomatic Complexity", "npath": "NPath Complexity",
+                       "bounded_paths": "Bounded Path Count"}
             rows = []
-            for m_name in self.metrics:
-                metric_value = self.metrics[m_name]
-                rows.append({"graph_name": m_name, "apc": metric_value[2][1],
-                             "cyclo": metric_value[0][1], "npath": metric_value[1][1]})
-            data = pd.DataFrame(rows, columns=["graph_name", "apc", "cyclo", "npath"])
+            for m_name, metric_value in self.metrics.items():
+                by_metric = dict(metric_value)
+                rows.append({"graph_name": m_name,
+                             **{column: by_metric.get(metric) for column, metric in columns.items()}})
+            data = pd.DataFrame(rows, columns=["graph_name", *columns])
 
             data.to_csv(f"{Env.EXPORT_PATH}/metrics.csv")
             self.logger.i_msg(f"Made file metrics.csv in {Env.EXPORT_PATH}/")
