@@ -1,33 +1,18 @@
-FROM ubuntu
+# Self-contained replication image: the source tree is copied in and the paper benchmark menu starts.
+# Build from the repo root (see replication/run.sh):
+#   docker build -t apcmetrinome/dockerapc -f replication/Dockerfile .
+FROM ubuntu:22.04
 
-RUN apt update
-RUN apt install -y lolcat
-RUN gem install lolcat
-RUN apt install -y git
-RUN apt install -y python3
-RUN apt install -y pip
-RUN apt install -y clang-14
-RUN apt install -y llvm-14
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        clang-14 llvm-14 openjdk-17-jdk-headless python3 python3-pip git lolcat \
+    && rm -rf /var/lib/apt/lists/*
 
-# RUN apt install -y clang-6.0 llvm-6.0 llvm-6.0-dev llvm-6.0-tools zsh vim tmux
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt wllvm
 
 COPY src/ /app/code/
-RUN pip install networkx
-RUN pip install pycparser
-RUN pip install mpmath
-RUN pip install sympy
-RUN pip install numpy
-RUN pip install networkx
-RUN pip install glob2
-RUN pip install pandas
-RUN pip install wllvm
-
-# RUN pip install clang
-RUN CC=/usr/bin/clang
-
 WORKDIR /app/code/
-ENV PYTHON_VERSION=3.9.1
 ENV PYTHONPATH=/app/code/
-# give permission to run bash file in docker container
-RUN chmod u+x Benchmark.sh
-CMD ["bash","Benchmark.sh"]
+CMD ["bash", "Benchmark.sh"]

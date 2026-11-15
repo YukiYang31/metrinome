@@ -1,0 +1,10 @@
+# Tests, analysis scripts under src/experiments and src/analyze, and linters (src/Makefile).
+-r requirements.txt
+coverage
+matplotlib
+requests
+scipy
+mypy
+pycodestyle
+pydocstyle
+pylint
