@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python }}, LLVM ${{ matrix.llvm }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, python: "3.10", llvm: 14 }  # the toolchain of the Docker images
+          - { os: ubuntu-24.04, python: "3.12", llvm: 18 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install clang and LLVM ${{ matrix.llvm }}
+        run: sudo apt-get update && sudo apt-get install -y clang-${{ matrix.llvm }} llvm-${{ matrix.llvm }}
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        working-directory: src
+        env:
+          METRINOME_CLANG: clang-${{ matrix.llvm }}
+        run: python -m unittest discover -s tests -t . -v
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the development image
+        run: docker build -t apcmetrinome/develop:ci -f src/Dockerfile .
+      - name: Build the replication image
+        run: docker build -t apcmetrinome/dockerapc:ci -f replication/Dockerfile .
+      - name: Convert C and Java and compute metrics inside the development image
+        run: >
+          docker run --rm -v "$PWD/src:/app/code" apcmetrinome/develop:ci
+          python3 -m unittest tests.test_bounded_paths tests.test_frontends -v
