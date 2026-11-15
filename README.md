@@ -11,9 +11,14 @@ Metrinome is an all-purpose tool for working with code complexity metrics. It ca
 - Converters to turn C, C++, Java, and Python code into control flow graphs (CFGs)
 - Metric calculators for NPath, Cyclomatic, and (asymptotic) Path Complexity, including interprocedural and recursive path complexity
 - The exact number of paths up to a given execution length (`--path-length K`, default 50), the quantity path complexity bounds asymptotically
-- KLEE utilities to automatically analyze C++ code
+- KLEE integration: generate a symbolic-execution harness for each C function, run KLEE on it, and replay the generated tests
 
 <img src="resources/repl_screenshot.png" height="300">
+
+## Documentation
+
+- [User guide](docs/user-guide.md): installing, the REPL commands, metrics, KLEE, reproducing the papers, troubleshooting
+- [Development guide](docs/development-guide.md): architecture, extending Metrinome, tests, CI, reproducibility rules
 
 ## Getting started
 
@@ -48,7 +53,9 @@ Metrinome finds its tools on `PATH`. Override them with environment variables wh
 | `METRINOME_OPT` | the `opt` installed next to the selected clang, else `opt` on `PATH` |
 | `JAVA_HOME` | `javac`/`java` on `PATH` |
 | `METRINOME_HOME` | the `src/` directory of this checkout (temporary and export files live here) |
-| `METRINOME_KLEE`, `METRINOME_KLEE_INCLUDE` | `/app/build/bin/klee`, `/app/klee/include` |
+| `METRINOME_KLEE` | `klee` on `PATH`; `klee-stats`, `ktest-tool`, headers and `libkleeRuntest` come from the same installation |
+| `METRINOME_KLEE_INCLUDE` | the `include/` directory of that installation |
+| `METRINOME_KLEE_CLANG` | `clang-N` where N is KLEE's LLVM version, else the selected clang if it is not newer (KLEE cannot read bitcode from a newer LLVM) |
 
 On Ubuntu: `sudo apt install clang-14 llvm-14 openjdk-17-jdk-headless`. Without root, conda-forge provides everything:
 `micromamba create -p ./toolchain -c conda-forge clang llvm-tools openjdk` and then add `./toolchain/bin` to `PATH`.
@@ -60,7 +67,22 @@ docker build -t apcmetrinome/develop:latest -f src/Dockerfile .
 cd src && make run             # mounts src/ at /app/code and starts a shell in the image
 ```
 
+The development image also contains KLEE 3.3.
+
 The self-contained replication image (`replication/Dockerfile`) copies the sources in and opens the paper benchmark menu.
+
+## KLEE
+
+KLEE is optional; only the `to_klee_format`, `klee_to_bc`, `klee` and `klee_replay` commands and `src/klee/` need it.
+Install KLEE 3.0 or newer with a clang of the same LLVM version; the [user guide](docs/user-guide.md#klee) shows a
+no-root build against conda-forge's LLVM 18 and the REPL workflow:
+
+```
+to_klee_format path/to/file.c   # one harness per function: parameters become symbolic inputs
+klee_to_bc *                    # compile the harnesses to bitcode
+klee *                          # run KLEE; tests go to src/klee_out/<function>/tests
+klee_replay <function>          # run the function natively on each test's inputs
+```
 
 ## Paper benchmarks
 
@@ -83,6 +105,7 @@ The suite includes regression tests that pin the published ICSE 2021 and ISSTA 2
 
 ## Links
 
-- **Documentation** https://github.com/hmc-alpaqa/metrinome/wiki
+- **Documentation** [user guide](docs/user-guide.md), [development guide](docs/development-guide.md)
+  (they supersede the 2021 [wiki](https://github.com/hmc-alpaqa/metrinome/wiki))
 - **DockerHub** https://hub.docker.com/repository/docker/harveymudd/metrinome
 - **Initial Paper** https://www.cs.hmc.edu/~bang/research/metrinome.pdf
