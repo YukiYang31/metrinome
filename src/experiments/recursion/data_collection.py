@@ -33,7 +33,7 @@ class DataCollector:
                              "num_vertices": [], "edge_count": [], "exception": [],
                              "exception_type": []})
         with open('/app/code/experiments/recursion/files/files.txt') as funcs:
-            files = [self.base_path + line.rstrip() for line in funcs]
+            files = [os.path.join(self.base_path, line.rstrip()) for line in funcs]
 
         for file in files:
             print(f"Now analyzing {file}")
@@ -118,7 +118,7 @@ class DataCollector:
                            "edge_count": graph.graph.edge_count(),
                            "exception_type": exception_type}
 
-                data = data.append(new_row, ignore_index=True)
+                data = data._append(new_row, ignore_index=True)
                 data.to_csv(f"/app/code/experiments/recursion/data/recursiveData.csv")
 
 def main() -> None:

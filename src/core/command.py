@@ -629,8 +629,9 @@ class Command:
 
                 # checkes if the function is recursive
                 recursiveCalls = False
-                for node in graph.metadata.calls.keys():
-                    if graph.metadata.calls[node].split()[1] == graph.name.split(".")[1]:
+                calls = graph.metadata.calls or {}
+                for node in calls:
+                    if calls[node].split()[1] == graph.name.split(".")[-1]:
                         recursiveCalls = True
                         break
                 isRecursive = self.recursive_apc and recursiveCalls

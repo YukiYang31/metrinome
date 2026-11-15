@@ -73,13 +73,12 @@ class Data:
                 file.write(str(metric_value))
                 self.logger.i_msg(f"Made file {new_name}_metrics in /app/code/exports/")
         elif name == "*":
-            data = pd.DataFrame({"graph_name": [], "apc": [],
-                                 "cyclo": [], "npath": []})
+            rows = []
             for m_name in self.metrics:
                 metric_value = self.metrics[m_name]
-                new_row = {"graph_name": m_name, "apc": metric_value[2][1],
-                           "cyclo": metric_value[0][1], "npath": metric_value[1][1]}
-                data = data.append(new_row, ignore_index=True)
+                rows.append({"graph_name": m_name, "apc": metric_value[2][1],
+                             "cyclo": metric_value[0][1], "npath": metric_value[1][1]})
+            data = pd.DataFrame(rows, columns=["graph_name", "apc", "cyclo", "npath"])
 
             data.to_csv("/app/code/exports/metrics.csv")
             self.logger.i_msg("Made file metrics.csv in /app/code/exports/")
