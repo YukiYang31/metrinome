@@ -2,6 +2,7 @@
 
 import unittest
 
+from core.env import Env
 from core.log import Log
 from graph.graph import EdgeListGraph
 from lang_to_cfg.python import PythonConvert
@@ -19,7 +20,7 @@ class TestPythonConvert(unittest.TestCase):
     def setUp(self) -> None:
         """Create an instance of the python converter for each test."""
         self.converter = PythonConvert(Log(display_output=False))
-        self.base_path = "/app/code/tests"
+        self.base_path = Env.project_file("tests")
 
     def test_expr(self) -> None:
         """

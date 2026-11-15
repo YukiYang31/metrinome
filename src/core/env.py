@@ -10,6 +10,7 @@ overridden with an environment variable:
     JAVA_HOME        JDK used for ``javac``/``java`` (default: PATH)
     METRINOME_KLEE   KLEE executable (default: ``/app/build/bin/klee``)
     METRINOME_KLEE_INCLUDE  KLEE headers (default: ``/app/klee/include``)
+    METRINOME_FAKE_LIBC  pycparser fake libc headers (default: the ``pycparser-fake-libc`` package)
 """
 import os
 import re
@@ -71,8 +72,9 @@ class Env:
     @cache
     def clang() -> str:
         """Path of clang, from METRINOME_CLANG or PATH. It compiles C and C++ (chosen by file extension)."""
-        return _require(os.environ.get("METRINOME_CLANG") or _which_versioned("clang"), "clang",
-                        "Install clang (LLVM 14 or newer) or set METRINOME_CLANG.")
+        override = os.environ.get("METRINOME_CLANG")
+        clang = (shutil.which(override) or override) if override else _which_versioned("clang")
+        return _require(clang, "clang", "Install clang (LLVM 14 or newer) or set METRINOME_CLANG.")
 
     @staticmethod
     @cache
@@ -97,6 +99,19 @@ class Env:
         if java_home and isfile(candidate := join(java_home, "bin", tool)):
             return candidate
         return _require(shutil.which(tool), tool, "Install a JDK (8 or newer) or set JAVA_HOME.")
+
+    @staticmethod
+    @cache
+    def fake_libc_include() -> str:
+        """Directory of pycparser's fake libc headers, from METRINOME_FAKE_LIBC or pycparser-fake-libc."""
+        if override := os.environ.get("METRINOME_FAKE_LIBC"):
+            return override
+        try:
+            import pycparser_fake_libc  # type: ignore # pylint: disable=import-outside-toplevel
+        except ImportError:
+            pycparser_fake_libc = None
+        return _require(getattr(pycparser_fake_libc, "directory", None), "pycparser fake libc headers",
+                        "Install them with `pip install pycparser-fake-libc` or set METRINOME_FAKE_LIBC.")
 
     @staticmethod
     def clean_temps() -> None:

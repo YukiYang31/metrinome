@@ -2,7 +2,10 @@
 import unittest
 from time import sleep
 
+from sympy import sympify  # type: ignore
+
 import utils
+from core.env import Env
 
 
 class Testutils(unittest.TestCase):
@@ -11,7 +14,7 @@ class Testutils(unittest.TestCase):
     # === show_func_defs ===
     def test_show_func_defs(self) -> None:
         """Check that we can get the names of all functions in a C file."""
-        names = utils.show_func_defs("/app/code/tests/cFiles/collatz.c")
+        names = utils.show_func_defs(Env.project_file("tests/cFiles/collatz.c"))
         self.assertTrue(len(names.keys()) == 1)
         self.assertTrue(list(names.keys())[0] == "countCollatz")
 
@@ -51,15 +54,26 @@ class Testutils(unittest.TestCase):
         self.assertEqual(big_o, '0')
 
     def test_big_o_constant(self) -> None:
-        """The big_o of a constant should be O(1)."""
-        constant_expression = ['1', '2', '3']
-        constant_expression_two = ['3', '2', '1']
+        """
+        Terms of the same order are summed, so the big O of constants is their sum.
 
-        big_o_one = utils.big_o(constant_expression)
-        big_o_two = utils.big_o(constant_expression_two)
+        Callers (metric.path_complexity) pass the sympy terms of path(n); same-order terms
+        are combined (`simplify(term_one + term_two)`) rather than one being dropped.
+        """
+        big_o_one = utils.big_o(list(sympify(['1', '2', '3'])))
+        big_o_two = utils.big_o(list(sympify(['3', '2', '1'])))
 
-        self.assertEqual(big_o_one, '3')
-        self.assertEqual(big_o_two, '1')
+        self.assertEqual(sympify(big_o_one), 6)
+        self.assertEqual(sympify(big_o_two), 6)
+
+    def test_big_o_same_order_sympy_terms(self) -> None:
+        """Same-order terms are summed while lower-order terms are dropped."""
+        big_o = utils.big_o(list(sympify(['2*n**2', '5*n', '3*n**2'])))
+        self.assertEqual(sympify(big_o), sympify('5*n**2'))
+
+    def test_big_o_same_order_strings(self) -> None:
+        """Same-order terms given as strings (the documented input) are added, not concatenated."""
+        self.assertEqual(sympify(utils.big_o(['1', '2', '3'])), 6)
 
     def test_big_o_polynomial(self) -> None:
         """The big_o of a polynomial should be O(x^n) where n is the degree of the polynomial."""
@@ -78,21 +92,12 @@ class Testutils(unittest.TestCase):
         self.assertEqual(expectedbig_o_two, big_o_two)
 
     def test_big_o_exponential(self) -> None:
-        """The big_o of an exponential should be O(a^x) where a is the base."""
-        # Expression One: "1 + x + .5^x + 2^x"
-        # Expression Two: "2*1.01^x + 1.02^x"
+        """The big_o of an exponential should be O(a^n) where a is the base (variable is 'n')."""
+        expression = ['1000000', 'n', '.5**n', '2**n']
+        expression_two = ['2*1.01**n', '1.02**n']
 
-        expression = ['1000000', 'x', '.5**x', '2**x']
-        expression_two = ['2*1.01**x', '1.02**x']
-
-        big_o_one = utils.big_o(expression)
-        big_o_two = utils.big_o(expression_two)
-
-        expectedbig_o_one = '2**x'
-        expectedbig_o_two = '1.02**x'
-
-        self.assertEqual(expectedbig_o_one, big_o_one)
-        self.assertEqual(expectedbig_o_two, big_o_two)
+        self.assertEqual(utils.big_o(expression), '2**n')
+        self.assertEqual(utils.big_o(expression_two), '1.02**n')
 
     # === Timeout ===
     def test_timeout_notimetout(self) -> None:

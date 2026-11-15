@@ -25,8 +25,9 @@ class TestPathComplexity(unittest.TestCase):
         self.assertEqual("Path Complexity", converter.name())
         cfg = ControlFlowGraph(get_test_graph())
         apc, path_complexity = converter.evaluate(cfg)
-        self.assertEqual(apc, 3)
-        self.assertEqual(path_complexity, 3)
+        # The closed form is solved numerically (least squares), so the result is a sympy Float.
+        self.assertAlmostEqual(float(apc), 3)
+        self.assertAlmostEqual(float(path_complexity), 3)
 
     def test_basecase_bfs(self) -> None:
         """Verify that BaseCaseBFS obtains initial pc values."""

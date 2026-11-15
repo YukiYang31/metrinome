@@ -167,9 +167,9 @@ class KleeUtils:
         """
         self._logger.d_msg(f"Going to parse file {filename}")
         if optimized:
-            cppargs = ['-O3', '-nostdinc', '-E', r'-I/app/pycparser/utils/fake_libc_include']
+            cppargs = ['-O3', '-nostdinc', '-E', f'-I{Env.fake_libc_include()}']
         else:
-            cppargs = ['-nostdinc', '-E', r'-I/app/pycparser/utils/fake_libc_include']
+            cppargs = ['-nostdinc', '-E', f'-I{Env.fake_libc_include()}']
         ast = parse_file(filename, use_cpp=True, cpp_path='gcc', cpp_args=cppargs)
         self._logger.d_msg("Going to visit functions.")
         func_visitor = FuncVisitor(self._logger)

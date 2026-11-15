@@ -18,6 +18,8 @@ from mpmath import mpc, mpf, polyroots  # type: ignore
 from pycparser import parse_file
 from sympy import Abs, Basic, Mul, Poly, Pow, limit, symbols, sympify, simplify  # type: ignore
 
+from core.env import Env
+
 
 def get_solution_from_roots(roots: List[Union[mpf, mpc]]) -> Tuple[List[Basic], List[Basic]]:
     """Return the solution to a recurrence relation given roots of the characteristic equation."""
@@ -143,9 +145,7 @@ def big_o(terms: List[str]) -> str:
                 terms.remove(term_one)
                 return big_o(terms)
             else: #first and second term have the same power, add them
-                # print("term one:",term_one)
-                # print("term two:",term_two)
-                terms[0] = simplify(term_one + term_two)
+                terms[0] = simplify(sympify(term_one) + sympify(term_two))
                 # print("combined:",terms[0])
                 terms.remove(term_two)
                 return big_o(terms)
@@ -164,7 +164,7 @@ def show_func_defs(filename: str) -> Dict[str, str]:
     """Return a list of the functions defined in a file."""
     # pylint: disable=unidiomatic-typecheck
     ast = parse_file(filename, use_cpp=True,
-                     cpp_args=r'-I/app/pycparser/utils/fake_libc_include')
+                     cpp_args=f"-I{Env.fake_libc_include()}")
 
     names = {}
     for i in ast:

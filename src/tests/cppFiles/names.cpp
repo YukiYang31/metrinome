@@ -1,6 +1,5 @@
-#include <iostream>
-#include <string>
-
+// A C++ class with a branching method. No standard-library headers, so the test does not depend
+// on the host's C++ standard library installation.
 
 class Jar {
     
@@ -8,9 +7,9 @@ class Jar {
     
     int nameCount = 5;
     
-    const std::string names[5]={"josh", "gabe", "sofia", "lucas", "ishaan"};
+    const char *names[5]={"josh", "gabe", "sofia", "lucas", "ishaan"};
     
-    std::string pull(int x) {
+    const char *pull(int x) {
         const int y = x%5;
         if (y != 1) {   
             return names[y];
@@ -24,7 +23,7 @@ class Jar {
 int main()
 {
     Jar j;
-    std::cout << j.pull(1) << std::endl;
+    j.pull(1);
     return 4;
     
 }

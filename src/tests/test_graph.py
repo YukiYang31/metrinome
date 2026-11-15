@@ -1,5 +1,6 @@
 """Test methods associated with Graph objects and their conversion to Prism files."""
 
+import os
 import re
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from typing import cast
 
 import numpy as np  # type: ignore
 
+from core.env import Env
 from graph.control_flow_graph import ControlFlowGraph as CFG
 from graph.graph import AdjListGraph, AdjListType, AdjMatGraph, EdgeListGraph, EdgeListType, Graph
 
@@ -110,21 +112,21 @@ class TestGraph(unittest.TestCase):
         graph = EdgeListGraph([[0, 1], [1, 2], [1, 3], [3, 4], [3, 5],
                                [2, 7], [4, 6], [5, 6], [6, 7]], 8)
         dot = graph.dot()
-        with open("/app/code/tests/dotFiles/dotTest.dot", "w+") as file:
-            file.write(dot)
-        frmfile = CFG.from_file("/app/code/tests/dotFiles/dotTest.dot",
-                                graph_type=EdgeListGraph)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "dotTest.dot")
+            with open(path, "w+") as file:
+                file.write(dot)
+            frmfile = CFG.from_file(path, graph_type=EdgeListGraph)
         self.assertEqual(frmfile.graph, graph)
 
     # === Graph::update_with_node ===
     def test_update_with_node(self) -> None:
         """Check that we can add a node to a Graph."""
         graph = EdgeListGraph(cast(EdgeListType, []), 1)
-        update = re.search(r"([0-9]*)\s*\[label=\"(.*)\"\]", "1 [label=\"EXIT\"]")
-        if update is None:
-            self.fail("Node cannot be None.")
-
-        graph.update_with_node(update, True)
+        # from_file passes every match of its node-with-label pattern on the line.
+        matches = re.finditer(r"([0-9]*)\s*(\[label=\"([^\"]*)\"\]+)", "1 [label=\"EXIT\"]")
+        graph.update_with_node(matches, True)
+        self.assertEqual(graph.end_node, 1)
         expected = EdgeListGraph(cast(EdgeListType, []), 2)
         self.assertEqual(expected, graph)
 
@@ -239,7 +241,7 @@ class TestGraph(unittest.TestCase):
     def test_from_file_one_vertex(self) -> None:
         """Test if we can get the adjacency list for a graph with no edges."""
         expected = EdgeListGraph(cast(EdgeListType, []), 2)
-        cfg = CFG.from_file("/app/code/tests/dotFiles/testsimple.dot",
+        cfg = CFG.from_file(Env.project_file("tests/dotFiles/testsimple.dot"),
                             graph_type=EdgeListGraph)
         self.assertEqual(expected, cfg.graph)
         # Graph.fromFile(None)
@@ -248,7 +250,7 @@ class TestGraph(unittest.TestCase):
         """Test if we can get the adjacency list for a graph with many edges and vertices."""
         expected = EdgeListGraph([[0, 1], [1, 2], [1, 3], [3, 4], [3, 5],
                                   [2, 7], [4, 6], [5, 6], [6, 7]], 8)
-        cfg = CFG.from_file("/app/code/tests/dotFiles/testgraph.dot",
+        cfg = CFG.from_file(Env.project_file("tests/dotFiles/testgraph.dot"),
                             graph_type=EdgeListGraph)
         self.assertEqual(expected, cfg.graph)
 

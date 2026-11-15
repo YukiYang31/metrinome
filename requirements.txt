@@ -7,5 +7,6 @@ networkx>=3.0
 numpy>=1.26
 pandas>=2.0
 pycparser>=2.21
+pycparser-fake-libc>=2.21
 rich>=12
 sympy>=1.12

@@ -3,6 +3,7 @@
 import unittest
 from typing import cast
 
+from core.env import Env
 from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph as CFG
 from graph.graph import AdjListGraph, AdjMatGraph, EdgeListGraph, EdgeListType
@@ -33,7 +34,7 @@ class TestNPATH(unittest.TestCase):
         6,/cfgs/simple_test_cfgs/vlab_cs_ucsb_test_SimpleExample_test6_0_basic.dot,4,8,
             Polynomial,0.02*n^3.,4. + 2.17*n + 0.38*n^2. + 0.02*n^3.
         """
-        base_path = "/app/code/tests/dotFiles/"
+        base_path = Env.project_file("tests/dotFiles/")
         prefix = "vlab_cs_ucsb_test_SimpleExample_test"
 
         results_one = []

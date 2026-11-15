@@ -4,13 +4,17 @@ import glob
 import os
 import sys
 import time
+import tempfile
+import unittest
 from contextlib import contextmanager
 from io import StringIO
 from math import floor
 from typing import Iterator, List, Tuple, Type, TypeVar, Union
+from unittest import mock
 
 from numpy import mean, median, std  # type: ignore
 
+from core.env import Env
 from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph as CFG
 from graph.graph import EdgeListGraph, Graph
@@ -31,6 +35,35 @@ def get_test_graph() -> Graph:
 def get_second_test_graph() -> Graph:
     """Return (smaller) ordinary  CFG for testing."""
     return EdgeListGraph([[0, 1], [1, 2], [1, 3], [2, 4], [3, 4]], 5)
+
+
+def use_private_temp_dirs(test: unittest.TestCase) -> str:
+    """
+    Point Env.TMP_PATH and Env.TMP_DOT_PATH at a fresh private directory for one test.
+
+    The real temp directories live in the checkout and are shared by every Metrinome process, so
+    tests that convert files or inspect the temp directories must not use them. Returns the root.
+    """
+    # On NFS a file deleted while another process still has it open lingers briefly as `.nfs*`.
+    root = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+    test.addCleanup(root.cleanup)
+    for name, sub in (("TMP_PATH", "tmp"), ("TMP_DOT_PATH", "tmp_dot")):
+        patcher = mock.patch.object(Env, name, os.path.join(root.name, sub))
+        patcher.start()
+        test.addCleanup(patcher.stop)
+    Env.make_temp()
+    return root.name
+
+
+def leftover_files(directory: str) -> List[str]:
+    """
+    Return the files under `directory`, ignoring NFS silly-renamed files (`.nfs*`).
+
+    Those are files that were already deleted while a just-exited process still held them open;
+    the NFS client removes them on its own shortly afterwards.
+    """
+    return [os.path.join(path, name) for path, _, names in os.walk(directory)
+            for name in names if not name.startswith(".nfs")]
 
 
 class Benchmark:
