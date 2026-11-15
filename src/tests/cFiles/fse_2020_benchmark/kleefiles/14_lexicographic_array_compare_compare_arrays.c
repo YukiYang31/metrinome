@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/14_lexicographic_array_compare.c>
+#include "../14_lexicographic_array_compare.c"
 #define SIZE 100
 int main() {
 

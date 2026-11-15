@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/19_longest_common_increasing_subsequence.c>
+#include "../19_longest_common_increasing_subsequence.c"
 #define SIZE 100
 int main() {
 

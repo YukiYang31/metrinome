@@ -1,10 +1,10 @@
-/app/code/tests/cFiles/C-master/sorting/bead_sort.c bead_sort
-/app/code/tests/cFiles/C-master/sorting/binary_insertion_sort.c insertionSort
-/app/code/tests/cFiles/C-master/sorting/bogo_sort.c bogo_sort
-/app/code/tests/cFiles/C-master/sorting/bubble_sort.c bubbleSort
-/app/code/tests/cFiles/C-master/sorting/bubble_sort_2.c bubble_sort //does not timeout
-/app/code/tests/cFiles/C-master/sorting/bubble_sort_recursion.c bubbleSort
-/app/code/tests/cFiles/C-master/sorting/bucket_sort.c BucketSort
-/app/code/tests/cFiles/C-master/sorting/cocktail_sort.c cocktailSort
-/app/code/tests/cFiles/C-master/sorting/comb_sort.c sort
-/app/code/tests/cFiles/C-master/sorting/counting_sort.c main
+tests/cFiles/C-master/sorting/bead_sort.c bead_sort
+tests/cFiles/C-master/sorting/binary_insertion_sort.c insertionSort
+tests/cFiles/C-master/sorting/bogo_sort.c bogo_sort
+tests/cFiles/C-master/sorting/bubble_sort.c bubbleSort
+tests/cFiles/C-master/sorting/bubble_sort_2.c bubble_sort //does not timeout
+tests/cFiles/C-master/sorting/bubble_sort_recursion.c bubbleSort
+tests/cFiles/C-master/sorting/bucket_sort.c BucketSort
+tests/cFiles/C-master/sorting/cocktail_sort.c cocktailSort
+tests/cFiles/C-master/sorting/comb_sort.c sort
+tests/cFiles/C-master/sorting/counting_sort.c main

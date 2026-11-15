@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/21_insertionsort.c>
+#include "../21_insertionsort.c"
 #define SIZE 100
 int main() {
 

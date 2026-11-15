@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/files/pascals-triangle-2.c>
+#include "../../../../../experiments/recursion/files/pascals-triangle-2.c"
 #define SIZE 10
 int main() {
 

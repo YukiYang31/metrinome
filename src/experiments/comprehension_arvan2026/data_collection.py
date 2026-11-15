@@ -3,7 +3,7 @@
 "On the Reliability of Code Comprehension Proxies", https://doi.org/10.1145/3832783.3834425.
 Snippets (from the replication package, https://doi.org/10.5281/zenodo.21218362):
   files/*.java    original Java methods, analysed via the Java bytecode CFG extractor
-  files_c/*.c     manual C translations, analysed via clang-14/LLVM (as in Dissem et al., ICPC 2023)
+  files_c/*.c     manual C translations, analysed via clang/LLVM (as in Dissem et al., ICPC 2023)
 Ground truth: data/ground_truth.csv (expert Delphi round-3 ranks and per-snippet student proxies).
 
 Each metric is correlated with the expert mean rank using Kendall's tau-b, the statistic used in the
@@ -20,13 +20,14 @@ import pandas as pd  # type: ignore
 from sympy import Poly, symbols, sympify  # type: ignore
 
 from core.log import Log
+from core.env import Env
 from lang_to_cfg.converter import ConverterAbstract
 from lang_to_cfg.cpp import CPPConvert
 from lang_to_cfg.java import JavaConvert
 from metric import cyclomatic_complexity, npath_complexity, path_complexity
 from utils import Timeout
 
-BASE_PATH = "/app/code/experiments/comprehension_arvan2026"
+BASE_PATH = Env.project_file("experiments/comprehension_arvan2026")
 N_VAR = symbols("n")
 METRICS = ["cyclo", "npath", "apc_rank"]
 

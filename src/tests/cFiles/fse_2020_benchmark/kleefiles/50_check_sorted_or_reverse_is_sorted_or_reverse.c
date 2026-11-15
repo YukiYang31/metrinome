@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/50_check_sorted_or_reverse.c>
+#include "../50_check_sorted_or_reverse.c"
 #define SIZE 100
 int main() {
 

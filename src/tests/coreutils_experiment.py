@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 import glob2  # type: ignore
 import pandas as pd  # type: ignore
 
+from core.env import Env
 from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph as CFG
 from metric import cyclomatic_complexity, metric, npath_complexity, path_complexity
@@ -144,7 +145,7 @@ def run_benchmark(converter: metric.MetricAbstract,
                   timeout_threshold: int,
                   show_info: bool = False) -> None:
     """Run all CFGs through the converter to create a benchmark."""
-    folders = (glob2.glob("/app/code/tests/core/separate/*/"))
+    folders = (glob2.glob(Env.project_file("tests/core/separate/*/")))
     print(f"number of folders: {len(folders)}\n")
     # list of tuples for all cfgs in all folders (seconds, folder, cfg).
 
@@ -180,7 +181,7 @@ def main() -> None:
                          "cyclo": [], "npath": [], "apc_time": [], "exception": [],
                          "exception_type": []})
 
-    folders = (glob2.glob("/app/code/tests/core/separate/*/"))
+    folders = (glob2.glob(Env.project_file("tests/core/separate/*/")))
 
     Apc = path_complexity.PathComplexity(log)
     Cyclo = cyclomatic_complexity.CyclomaticComplexity(log)
@@ -238,18 +239,18 @@ def main() -> None:
                        "exception": ex, "exception_type": exception_type}
 
             data = data.append(new_row, ignore_index=True)
-            data.to_csv("/app/code/tests/core/final.csv")
+            data.to_csv(Env.project_file("tests/core/final.csv"))
 
 
 if __name__ == "__main__":
     main()
 
 # """Run all CFGs through the converter to create a benchmark."""
-# files = (glob2.glob("/app/code/tests/core/separate/*"))
+# files = (glob2.glob(Env.project_file("tests/core/separate/*")))
 
-# os.chdir("/app/code/tests/core/separate")
+# os.chdir(Env.project_file("tests/core/separate"))
 # for file in files:
 #     name = os.path.basename(file)
-#     os.chdir(f"/app/code/tests/core/separate/{name}/")
+#     os.chdir(f"{Env.PROJECT_PATH}/tests/core/separate/{name}/")
 #     f = f".{name}.bc"
 #     subprocess.check_call(["opt", "-dot-cfg", f"{f}"])

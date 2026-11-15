@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/23_mergesort.c>
+#include "../23_mergesort.c"
 #define SIZE 100
 int main() {
 

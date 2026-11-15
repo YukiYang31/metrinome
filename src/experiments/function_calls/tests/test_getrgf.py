@@ -4,6 +4,7 @@ from metric.path_complexity import PathComplexityRes
 from metric import fcn_call_path_complexity
 from lang_to_cfg.cpp import CPPConvert
 from core.log import Log, LogLevel
+from core.env import Env
 import pandas as pd  # type: ignore
 from typing import Union
 import time
@@ -34,20 +35,20 @@ class DataCollector:
                              "exception": [],"exception_type": [],"case":[],'gamma':[]})
         
         # this is needed if we're using Testing.sh and chooseFile.txt
-        if (path=="/app/code/chooseFile.txt"):
+        if (path==Env.project_file("chooseFile.txt")):
             with open(path) as filess:
                 filePathwithComments = [line.rstrip() for line in filess]
                 path = filePathwithComments[0].split()[0]
                 print(f"benchmark that we are testing {path}")
         
-        with open(path) as funcs:
+        with open(Env.project_file(path)) as funcs:
             files = [line.rstrip() for line in funcs]
 
         for i in files:
             # if the line starts with "*", ignore
             if i[0:1] == "*":
                 continue
-            file = i.split()[0]
+            file = Env.project_file(i.split()[0])
             funcs = i.split()[1:]
             print(f"Now analyzing {file}")
             graphs = self.converter.to_graph(os.path.splitext(file)[0], ".c")
@@ -101,15 +102,15 @@ class DataCollector:
                            'case':getrgfapc['case'],
                            'gamma':getrgfapc['gamma']}
 
-                data = data._append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 # only keep columns graph_name, rapc, fcapc, num_vertices, edge_count, and runtimes
                 data = data[["graph_name", "getrgfapc", "getrgfapc_time", 'getrgfTime', 'firstHalfTime', "longest for getrgf", "longest time",'case','gamma']]
 
 
                 # create directory if it doesn't exist
-                if not os.path.exists("/app/code/experiments/function_calls/data"):
-                    os.makedirs("/app/code/experiments/function_calls/data")
-                data.to_csv("/app/code/experiments/function_calls/data/getrgfapc_data.csv")
+                if not os.path.exists(Env.project_file("experiments/function_calls/data")):
+                    os.makedirs(Env.project_file("experiments/function_calls/data"))
+                data.to_csv(Env.project_file("experiments/function_calls/data/getrgfapc_data.csv"))
 
 
                 # format rapc column decimals to have at most 3 decimal places, e.g. 0.33333333n -> 0.333n
@@ -167,4 +168,4 @@ if __name__ == "__main__":
     
     # For Testing.sh
     else:
-        main("/app/code/chooseFile.txt")
+        main(Env.project_file("chooseFile.txt"))

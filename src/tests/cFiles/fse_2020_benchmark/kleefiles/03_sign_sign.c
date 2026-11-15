@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/03_sign.c>
+#include "../03_sign.c"
 #define SIZE 100
 int main() {
 

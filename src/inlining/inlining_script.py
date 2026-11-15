@@ -3,6 +3,7 @@
 import re
 
 from utils import show_func_defs
+from core.env import Env
 
 
 def get_lines(file: str) -> list[str]:
@@ -41,7 +42,7 @@ def main() -> None:
     files_to_inline = ['test-40-un-inlined.c']
 
     for file in files_to_inline:
-        in_lining(f"/app/code/tests/cFiles/inlining_tests/{file}")
+        in_lining(f"{Env.PROJECT_PATH}/tests/cFiles/inlining_tests/{file}")
 
 
 if __name__ == "__main__":

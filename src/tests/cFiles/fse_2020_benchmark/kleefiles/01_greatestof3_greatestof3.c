@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/01_greatestof3.c>
+#include "../01_greatestof3.c"
 #define SIZE 100
 int main() {
 

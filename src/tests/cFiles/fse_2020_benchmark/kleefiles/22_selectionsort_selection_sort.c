@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/22_selectionsort.c>
+#include "../22_selectionsort.c"
 #define SIZE 100
 int main() {
 

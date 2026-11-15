@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/05_parity.c>
+#include "../05_parity.c"
 #define SIZE 100
 int main() {
 

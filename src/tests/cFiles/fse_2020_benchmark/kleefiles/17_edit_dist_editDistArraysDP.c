@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/17_edit_dist.c>
+#include "../17_edit_dist.c"
 #define SIZE 100
 int main() {
 

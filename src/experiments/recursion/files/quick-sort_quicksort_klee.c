@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/files/quick-sort.c>
+#include "quick-sort.c"
 #define SIZE 10
 int main() {
 

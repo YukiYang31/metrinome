@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/25_heapsort.c>
+#include "../25_heapsort.c"
 #define SIZE 100
 int main() {
 

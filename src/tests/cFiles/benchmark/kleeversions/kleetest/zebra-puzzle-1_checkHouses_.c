@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/files/zebra-puzzle-1.c>
+#include "../../../../../experiments/recursion/files/zebra-puzzle-1.c"
 #define SIZE 10
 int main() {
 

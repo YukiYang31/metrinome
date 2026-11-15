@@ -6,6 +6,7 @@ from typing import Union
 import pandas as pd  # type: ignore
 
 from core.log import Log
+from core.env import Env
 from lang_to_cfg.cpp import CPPConvert
 from metric import cyclomatic_complexity, npath_complexity, path_complexity, recursive_path_complexity
 from metric.path_complexity import PathComplexityRes
@@ -22,7 +23,7 @@ class FileSorter:
         """Create a new instance of the data collector."""
         log = Log()
         self.converter = CPPConvert(log)
-        self.base_path = "/app/code/experiments/recursion"
+        self.base_path = Env.project_file("experiments/recursion")
 
     # pylint: disable=broad-except
     def sort(self) -> None:
@@ -63,7 +64,7 @@ class FileSorter:
                         if not os.path.exists(os.path.join(sorted, filename)):
                             os.rename(f, os.path.join(sorted, filename))
                             file1 = open(append, "a")
-                            file1.write(filename)
+                            file1.write(os.path.relpath(os.path.join(sorted, filename), Env.PROJECT_PATH))
                             file1.write("\n")
                             file1.close()
 
@@ -111,7 +112,7 @@ class FileSorter:
         #                    "exception_type": exception_type}
         #
         #         data = data.append(new_row, ignore_index=True)
-        #         data.to_csv(f"/app/code/experiments/recursion/data/recursiveData.csv")
+        #         data.to_csv(f"{Env.PROJECT_PATH}/experiments/recursion/data/recursiveData.csv")
 
 def main() -> None:
     """Compute metrics for many graphs."""

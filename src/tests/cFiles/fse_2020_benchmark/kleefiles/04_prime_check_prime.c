@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/04_prime.c>
+#include "../04_prime.c"
 #define SIZE 100
 int main() {
 

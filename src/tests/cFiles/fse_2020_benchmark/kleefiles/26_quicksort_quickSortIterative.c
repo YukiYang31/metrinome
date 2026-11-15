@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/26_quicksort.c>
+#include "../26_quicksort.c"
 #define SIZE 100
 int main() {
 

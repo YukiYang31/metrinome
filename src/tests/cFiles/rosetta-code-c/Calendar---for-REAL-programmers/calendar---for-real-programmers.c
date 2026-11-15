@@ -1,4 +1,4 @@
-// /app/code/tests/cFiles/rosetta-code-c/Calendar---for-REAL-programmers/calendar---for-real-programmers.c
+// tests/cFiles/rosetta-code-c/Calendar---for-REAL-programmers/calendar---for-real-programmers.c
 
 // /* UPPER CASE ONLY VERSION OF THE ORIGINAL CALENDAR.C, CHANGES MOSTLY TO AVOID NEEDING #INCLUDES */
 // /* ERROR MESSAGES GO TO STDOUT TO SLIGHTLY SIMPLIFY THE I/O HANDLING                             */

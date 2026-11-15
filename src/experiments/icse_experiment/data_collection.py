@@ -6,6 +6,7 @@ from typing import Union
 import pandas as pd  # type: ignore
 
 from core.log import Log
+from core.env import Env
 from lang_to_cfg.cpp import CPPConvert
 from metric import cyclomatic_complexity, npath_complexity, path_complexity
 from metric.path_complexity import PathComplexityRes
@@ -22,7 +23,6 @@ class DataCollector:
         self.apc_computer = path_complexity.PathComplexity(log)
         self.cyclo_computer = cyclomatic_complexity.CyclomaticComplexity(log)
         self.npath_computer = npath_complexity.NPathComplexity(log)
-        self.base_path = "/app/code/experiments/icse_experiment/files/"
 
     # pylint: disable=broad-except
     def collect(self) -> None:
@@ -32,8 +32,8 @@ class DataCollector:
                              "num_vertices": [], "edge_count": [], "exception": [],
                              "exception_type": []})
 
-        with open('/app/code/experiments/icse_experiment/files/files.txt') as funcs:
-            files = [os.path.join(self.base_path, line.rstrip()) for line in funcs]
+        with open(Env.project_file('experiments/icse_experiment/files/files.txt')) as funcs:
+            files = [Env.project_file(line.rstrip()) for line in funcs]
 
         for file in files:
             print(file)
@@ -79,8 +79,8 @@ class DataCollector:
                            "edge_count": graph.graph.edge_count(), "exception": ex,
                            "exception_type": exception_type}
 
-                data = data._append(new_row, ignore_index=True)
-                data.to_csv("/app/code/experiments/icse_experiment/data/Optimized.csv")
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
+                data.to_csv(Env.project_file("experiments/icse_experiment/data/Optimized.csv"))
 
 
 def main() -> None:
@@ -94,11 +94,11 @@ if __name__ == "__main__":
 
 
 # """Run all CFGs through the converter to create a benchmark."""
-# files = (glob2.glob("/app/code/tests/core/separate/*"))
+# files = (glob2.glob(Env.project_file("tests/core/separate/*")))
 
-# os.chdir("/app/code/tests/core/separate")
+# os.chdir(Env.project_file("tests/core/separate"))
 # for file in files:
 #     name = os.path.basename(file)
-#     os.chdir(f"/app/code/tests/core/separate/{name}/")
+#     os.chdir(f"{Env.PROJECT_PATH}/tests/core/separate/{name}/")
 #     f = f".{name}.bc"
 #     subprocess.check_call(["opt", "-dot-cfg", f"{f}"])

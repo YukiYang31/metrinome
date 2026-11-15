@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/06_palindrome.c>
+#include "../06_palindrome.c"
 #define SIZE 100
 int main() {
 

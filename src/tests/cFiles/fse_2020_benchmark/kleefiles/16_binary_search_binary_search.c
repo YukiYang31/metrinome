@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/16_binary_search.c>
+#include "../16_binary_search.c"
 #define SIZE 100
 int main() {
 

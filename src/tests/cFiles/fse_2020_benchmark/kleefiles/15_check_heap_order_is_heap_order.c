@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/15_check_heap_order.c>
+#include "../15_check_heap_order.c"
 #define SIZE 100
 int main() {
 

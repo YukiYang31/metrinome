@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/10_find_val_in_array.c>
+#include "../10_find_val_in_array.c"
 #define SIZE 100
 int main() {
 

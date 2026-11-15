@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/32_newtons_method.c>
+#include "../32_newtons_method.c"
 #define SIZE 100
 int main() {
 

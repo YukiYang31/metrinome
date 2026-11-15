@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/11_array_max.c>
+#include "../11_array_max.c"
 #define SIZE 100
 int main() {
 

@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/13_check_arrays_equal.c>
+#include "../13_check_arrays_equal.c"
 #define SIZE 100
 int main() {
 

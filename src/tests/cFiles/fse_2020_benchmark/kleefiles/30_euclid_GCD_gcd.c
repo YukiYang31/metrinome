@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/30_euclid_GCD.c>
+#include "../30_euclid_GCD.c"
 #define SIZE 100
 int main() {
 

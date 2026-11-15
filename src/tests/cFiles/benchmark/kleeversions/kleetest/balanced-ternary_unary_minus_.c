@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/files/balanced-ternary.c>
+#include "../../../../../experiments/recursion/files/balanced-ternary.c"
 #define SIZE 10
 int main() {
 

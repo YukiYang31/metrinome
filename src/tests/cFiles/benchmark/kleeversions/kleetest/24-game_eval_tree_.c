@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/files/24-game.c>
+#include "../../../../../experiments/recursion/files/24-game.c"
 #define SIZE 10
 int main() {
 

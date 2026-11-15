@@ -63,7 +63,7 @@ def parse_klee(klee_output: str) -> KleeOutputInfo:
 
 def klee_cmd(bcname: str, new_name: str) -> str:
     """Get the KLEE command as a string."""
-    return f"clang-6.0 -I /app/klee/include -emit-llvm -c -g\
+    return f"{Env.clang()} -I {Env.KLEE_INCLUDE} -emit-llvm -c -g\
              -O0 -Xclang -disable-O0-optnone  -o {bcname} {new_name}"
 
 

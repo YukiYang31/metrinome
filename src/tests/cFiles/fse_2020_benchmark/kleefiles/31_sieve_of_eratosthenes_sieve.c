@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/31_sieve_of_eratosthenes.c>
+#include "../31_sieve_of_eratosthenes.c"
 #define SIZE 100
 int main() {
 

@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/51_variance.c>
+#include "../51_variance.c"
 #define SIZE 100
 int main() {
 

@@ -6,6 +6,7 @@ from typing import Union
 import pandas as pd  # type: ignore
 
 from core.log import Log, LogLevel
+from core.env import Env
 from lang_to_cfg.cpp import CPPConvert
 from metric import cyclomatic_complexity, npath_complexity, path_complexity, recursive_path_complexity
 from metric.path_complexity import PathComplexityRes
@@ -23,7 +24,6 @@ class DataCollector:
         self.recursive_apc_computer = recursive_path_complexity.RecursivePathComplexity(log)
         self.cyclo_computer = cyclomatic_complexity.CyclomaticComplexity(log)
         self.npath_computer = npath_complexity.NPathComplexity(log)
-        self.base_path = "/app/code/experiments/recursion/files/"
 
     # pylint: disable=broad-except
     def collect(self) -> None:
@@ -32,8 +32,8 @@ class DataCollector:
                              "cyclo": [], "npath": [], "apc_time": [], "rapc_time": [], "brapc_time": [],
                              "num_vertices": [], "edge_count": [], "exception": [],
                              "exception_type": []})
-        with open('/app/code/experiments/recursion/files/files.txt') as funcs:
-            files = [os.path.join(self.base_path, line.rstrip()) for line in funcs]
+        with open(Env.project_file('experiments/recursion/files/files.txt')) as funcs:
+            files = [Env.project_file(line.rstrip()) for line in funcs]
 
         for file in files:
             print(f"Now analyzing {file}")
@@ -119,7 +119,7 @@ class DataCollector:
                            "exception_type": exception_type}
 
                 data = data._append(new_row, ignore_index=True)
-                data.to_csv(f"/app/code/experiments/recursion/data/recursiveData.csv")
+                data.to_csv(f"{Env.PROJECT_PATH}/experiments/recursion/data/recursiveData.csv")
 
 def main() -> None:
     """Compute metrics for many graphs."""

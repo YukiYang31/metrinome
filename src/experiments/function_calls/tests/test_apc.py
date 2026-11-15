@@ -4,6 +4,7 @@ from metric.path_complexity import PathComplexityRes
 from metric import path_complexity
 from lang_to_cfg.cpp import CPPConvert
 from core.log import Log, LogLevel
+from core.env import Env
 import pandas as pd  # type: ignore
 from typing import Union
 import time
@@ -25,16 +26,16 @@ class DataCollector:
     def collect(self) -> None:
         """Compute the metrics for all files and store the data."""
         data = pd.DataFrame({"file_name": [], "graph_name": [], "apc": [], "apc_time": [],"exception": [],"exception_type": []})
-        with open("/app/code/chooseFile.txt") as filess:
+        with open(Env.project_file("chooseFile.txt")) as filess:
             filePathwithComments = [line.rstrip() for line in filess]
             filePath = filePathwithComments[0].split()[0]
             print(filePath)
-        with open(filePath) as funcs:
-            # files = ['/app/code/experiments/recursion/files/catalan-numbers-1.c' ]
+        with open(Env.project_file(filePath)) as funcs:
+            # files = [Env.project_file('experiments/recursion/files/catalan-numbers-1.c') ]
             files = [line.rstrip() for line in funcs]
 
         for i in files:
-            file = i.split()[0]
+            file = Env.project_file(i.split()[0])
             funcs = i.split()[1:]
             print(f"Now analyzing {file}")
             graphs = self.converter.to_graph(os.path.splitext(file)[0], ".c")
@@ -69,7 +70,7 @@ class DataCollector:
                 new_row = {"file_name": file, "graph_name": graph.name, "apc": apc,
                            "apc_time": runtime,"exception_type": exception_type}
 
-                data = data._append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 # only keep columns graph_name, rapc, fcapc, num_vertices, edge_count, and runtimes
                 data = data[["graph_name", "apc", "apc_time"]]
 
@@ -80,9 +81,9 @@ class DataCollector:
 
 
                 # create directory if it doesn't exist
-                if not os.path.exists("/app/code/experiments/function_calls/data"):
-                    os.makedirs("/app/code/experiments/function_calls/data")
-                data.to_csv("/app/code/experiments/function_calls/data/apc_data.csv")
+                if not os.path.exists(Env.project_file("experiments/function_calls/data")):
+                    os.makedirs(Env.project_file("experiments/function_calls/data"))
+                data.to_csv(Env.project_file("experiments/function_calls/data/apc_data.csv"))
 
 
 def round_tuple_of_exprs(tup, num_digits):

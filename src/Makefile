@@ -9,17 +9,17 @@ lint: fix-lint check-lint
 
 fix-lint:
 	isort -l 100 .
-	find /app/code -type f -name "*.py" | xargs sed -i -e 's/[[:space:]]*$$//g'
-	find /app/code -type f -name "*.py" | xargs sed -i -e 's/	/    /g'
+	find . -type f -name "*.py" | xargs sed -i -e 's/[[:space:]]*$$//g'
+	find . -type f -name "*.py" | xargs sed -i -e 's/	/    /g'
 
 check-lint:
-	find /app/code -type f -name "*.py" | xargs pycodestyle --config=./config/pycodestyle # Enforce PEP8.
-	find /app/code -type f -name "*.py" | xargs dmypy run -- --config-file=./config/.mypy.ini # Type checking.
-	find /app/code -type f -name "*.py" | xargs pydocstyle --count # Enforce docstring formatting.
-	find /app/code -type f -name "*.py" | xargs pylint --rcfile=config/pylintrc -r n -f parseable # Linting.
+	find . -type f -name "*.py" | xargs pycodestyle --config=./config/pycodestyle # Enforce PEP8.
+	find . -type f -name "*.py" | xargs dmypy run -- --config-file=./config/.mypy.ini # Type checking.
+	find . -type f -name "*.py" | xargs pydocstyle --count # Enforce docstring formatting.
+	find . -type f -name "*.py" | xargs pylint --rcfile=config/pylintrc -r n -f parseable # Linting.
 
 test:
-	python -m unittest discover /app/code/tests
+	python -m unittest discover ./tests
 
 coverage:
 	coverage run -m unittest discover 
@@ -38,7 +38,7 @@ clean:
 # =========================
 
 build: 
-	docker build -t apcmetrinome/develop:latest .
+	docker build -t apcmetrinome/develop:latest -f Dockerfile ..
 push:
 	docker push apcmetrinome/develop
 ifeq ($(UNAME_S),Darwin)

@@ -6,6 +6,7 @@
 
 #!/bin/bash
 
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Set the path to your Python file
 #python_file="experiments/optimization/solve_vs_nsolve.py"
 
@@ -13,19 +14,19 @@
 # for ((i=1; i<=5; i++))
 # do
 #     echo "Running iteration $i"
-#     python /app/code/tests/test_getrgf.py
+#     python "$SRC/tests/test_getrgf.py"
 # done
 
-# python /app/code/tests/test_apc.py
+# python "$SRC/tests/test_apc.py"
 
-# python /app/code/tests/test_rapc.py
+# python "$SRC/tests/test_rapc.py"
 
-# python /app/code/tests/test_fcapc.py
+# python "$SRC/tests/test_fcapc.py"
 
-# python /app/code/tests/test_og.py
+# python "$SRC/tests/test_og.py"
 
-# python /app/code/tests/test_nfcapc.py
+# python "$SRC/tests/test_nfcapc.py"
 
-# python /app/code/tests/test_getrgf.py #must run this in order for mergeTestResult to work
+# python "$SRC/tests/test_getrgf.py" #must run this in order for mergeTestResult to work
 
-# python /app/code/tests/mergeTestResult.py
+# python "$SRC/tests/mergeTestResult.py"

@@ -1,4 +1,5 @@
 """Adds always inline attribute to C Files."""
+from core.env import Env
 
 
 def get_lines(file: str) -> tuple[bool, list[str]]:
@@ -57,7 +58,7 @@ def main() -> None:
     files_to_inline = ['04_prime_helper.c']
 
     for file in files_to_inline:
-        in_lining(f"/app/code/tests/cFiles/in_lining_tests_on_fse/{file}")
+        in_lining(f"{Env.PROJECT_PATH}/tests/cFiles/in_lining_tests_on_fse/{file}")
 
 
 if __name__ == "__main__":

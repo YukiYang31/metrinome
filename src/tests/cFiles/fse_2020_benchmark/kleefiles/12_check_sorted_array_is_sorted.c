@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/12_check_sorted_array.c>
+#include "../12_check_sorted_array.c"
 #define SIZE 100
 int main() {
 

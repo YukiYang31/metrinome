@@ -5,6 +5,7 @@ from metric import cyclomatic_complexity, npath_complexity, path_complexity, fcn
 from core.command_data import Data
 from lang_to_cfg.cpp import CPPConvert
 from core.log import Log, LogLevel
+from core.env import Env
 import pandas as pd  # type: ignore
 from typing import Union
 import time
@@ -26,7 +27,7 @@ class DataCollector:
         self.recursive_apc_computer = recursive_path_complexity.RecursivePathComplexity(log)
         self.cyclo_computer = cyclomatic_complexity.CyclomaticComplexity(log)
         self.npath_computer = npath_complexity.NPathComplexity(log)
-        self.base_path = "/app/code/experiments/function_calls/files/"
+        self.base_path = Env.project_file("experiments/function_calls/files/")
 
     # pylint: disable=broad-except
     def collect(self) -> None:
@@ -35,10 +36,10 @@ class DataCollector:
                              "cyclo": [], "npath": [], "apc_time": [], "rapc_time": [], "fcapc_time": [],
                              "num_vertices": [], "edge_count": [], "exception": [],
                              "exception_type": []})
-        with open('/app/code/experiments/function_calls/files/files.txt') as funcs:
-            # files = ['/app/code/experiments/recursion/files/catalan-numbers-1.c' ]
+        with open(Env.project_file('experiments/function_calls/files/files.txt')) as funcs:
+            # files = [Env.project_file('experiments/recursion/files/catalan-numbers-1.c') ]
 
-            files = [line.rstrip() for line in funcs]
+            files = [Env.project_file(line.rstrip()) for line in funcs]
         
         for file in files:
             print(f"Now analyzing {file}")
@@ -146,7 +147,7 @@ class DataCollector:
                            "edge_count": graph.graph.edge_count(),
                            "exception_type": exception_type}
 
-                data = data.append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 # only keep columns graph_name, rapc, fcapc, num_vertices, edge_count, and runtimes
                 data = data[["graph_name", 'apc']]
 
@@ -157,10 +158,10 @@ class DataCollector:
 
 
                 # create directory if it doesn't exist
-                if not os.path.exists("/app/code/experiments/function_calls/data"):
-                    os.makedirs("/app/code/experiments/function_calls/data")
+                if not os.path.exists(Env.project_file("experiments/function_calls/data")):
+                    os.makedirs(Env.project_file("experiments/function_calls/data"))
                 data.to_csv(
-                    "/app/code/experiments/function_calls/data/functionCallData.csv")
+                    Env.project_file("experiments/function_calls/data/functionCallData.csv"))
 
 def round_tuple_of_exprs(tup, num_digits):
     return tuple(round_expr(expr, num_digits) for expr in tup)

@@ -4,6 +4,7 @@ from metric.path_complexity import PathComplexityRes
 from metric import fcn_call_path_complexity_naive
 from lang_to_cfg.cpp import CPPConvert
 from core.log import Log, LogLevel
+from core.env import Env
 import pandas as pd  # type: ignore
 from typing import Union
 import time
@@ -27,20 +28,20 @@ class DataCollector:
         data = pd.DataFrame({"file_name": [], "graph_name": [], "fcapc": [], "fcapc_time": [], 'naiveMathTime':[], 'firstHalfTime':[], "exception": [],"exception_type": []})
         
         # this is needed if we're using Testing.sh and chooseFile.txt
-        if (path=="/app/code/chooseFile.txt"):
+        if (path==Env.project_file("chooseFile.txt")):
             with open(path) as filess:
                 filePathwithComments = [line.rstrip() for line in filess]
                 path = filePathwithComments[0].split()[0]
                 print(f"benchmark that we are testing {path}")
         
         # this needs to happen no matter which script we run
-        with open(path) as funcs:
+        with open(Env.project_file(path)) as funcs:
             files = [line.rstrip() for line in funcs]
 
         for i in files:
             if i[0:1] == "*":
                 continue
-            file = i.split()[0]
+            file = Env.project_file(i.split()[0])
             funcs = i.split()[1:]
             print(f"Now analyzing {file}")
             graphs = self.converter.to_graph(os.path.splitext(file)[0], ".c")
@@ -64,12 +65,12 @@ class DataCollector:
                 if graph_name == "bubble_sort_2_cfg.bubble_sort.dot" or graph_name == "heap_sort_2_cfg.heapSort.dot":
                     new_row = {"file_name": file, "graph_name": graph.name, "fcapc": 'na',
                           "fcapc_time": 'na',"naiveMathTime":"na", "firstHalfTime":"na"}
-                    data = data._append(new_row, ignore_index=True)
+                    data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                     data = data[["graph_name", "fcapc", "fcapc_time", "naiveMathTime", 'firstHalfTime']]
                     print(data[["graph_name", "fcapc", "fcapc_time", "naiveMathTime", 'firstHalfTime']])
-                    if not os.path.exists("/app/code/experiments/function_calls/data"):
-                        os.makedirs("/app/code/experiments/function_calls/data")
-                        data.to_csv("/app/code/experiments/function_calls/data/fcapc_data.csv")
+                    if not os.path.exists(Env.project_file("experiments/function_calls/data")):
+                        os.makedirs(Env.project_file("experiments/function_calls/data"))
+                        data.to_csv(Env.project_file("experiments/function_calls/data/fcapc_data.csv"))
                     continue
 
                 print("=========================runing old function call path complexity for 6000 seconds==========================")
@@ -87,7 +88,7 @@ class DataCollector:
                 new_row = {"file_name": file, "graph_name": graph.name, "fcapc": fcapc['apc'],
                            "fcapc_time": fcruntime,'naiveMathTime': fcapc['naiveMathTime'],'firstHalfTime':fcapc['firstHalfTime'], "exception_type": exception_type}
 
-                data = data._append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 # only keep columns graph_name, rapc, fcapc, num_vertices, edge_count, and runtimes
                 data = data[["graph_name", "fcapc", "fcapc_time", "naiveMathTime", 'firstHalfTime']]
 
@@ -98,9 +99,9 @@ class DataCollector:
 
 
                 # create directory if it doesn't exist
-                if not os.path.exists("/app/code/experiments/function_calls/data"):
-                    os.makedirs("/app/code/experiments/function_calls/data")
-                data.to_csv("/app/code/experiments/function_calls/data/fcapc_data.csv")
+                if not os.path.exists(Env.project_file("experiments/function_calls/data")):
+                    os.makedirs(Env.project_file("experiments/function_calls/data"))
+                data.to_csv(Env.project_file("experiments/function_calls/data/fcapc_data.csv"))
 
 
 def round_tuple_of_exprs(tup, num_digits):
@@ -148,4 +149,4 @@ if __name__ == "__main__":
     
     # For Testing.sh
     else:
-        main("/app/code/chooseFile.txt")
+        main(Env.project_file("chooseFile.txt"))

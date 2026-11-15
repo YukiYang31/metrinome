@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/simpleAlgs/02_fib.c>
+#include "../02_fib.c"
 #define SIZE 100
 int main() {
 

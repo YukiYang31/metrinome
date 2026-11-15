@@ -1,5 +1,5 @@
 #include <klee/klee.h>
-#include </app/code/tests/cFiles/benchmark/kleeversions/rosetta-code-c/lina.c>
+#include "lina.c"
 #define SIZE 10
 int main() {
 

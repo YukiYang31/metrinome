@@ -18,6 +18,7 @@ from itertools import combinations
 
 from core.command import Command, Controller, REPLOptions
 from core.command_data import MetricRes, MetricsDict
+from core.env import Env
 from core.log import Log
 from main import Options
 
@@ -72,7 +73,7 @@ def test_analysis() -> None:
     options = REPLOptions(curr_path="", debug_mode=False, poor=False,
                           multithreaded=False,)
     command = Command(options, None)
-    command.do_convert("/app/code/tests/cFiles/*")
+    command.do_convert(Env.project_file("tests/cFiles/*"))
     command.do_metrics(Options(), "*")
     metrics_comparer = MetricsComparer(command.data.metrics)
     print(metrics_comparer.counter_dict)

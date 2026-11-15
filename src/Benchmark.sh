@@ -1,9 +1,12 @@
 # Add paths to this list
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PYTHONPATH="$SRC${PYTHONPATH:+:$PYTHONPATH}"
+
 paper_dict='{
-   "1": "/app/code/experiments/icse_experiment/files/files.txt",
-   "2": "/app/code/experiments/recursion/files/files.txt",
-   "3": "/app/code/experiments/function_calls/benchmark/benchmarkFiles.txt",
-   "4": "/app/code/tests/cFiles/C-master/CmasterFiles.txt",
+   "1": "experiments/icse_experiment/files/files.txt",
+   "2": "experiments/recursion/files/files.txt",
+   "3": "experiments/function_calls/benchmark/benchmarkFiles.txt",
+   "4": "tests/cFiles/C-master/CmasterFiles.txt",
    "5": "REPL"
    }'
 
@@ -11,7 +14,7 @@ paper_dict='{
 apc_dict='"1" "2" "3" "4" "5"'
 
 # Add papers below in chronological order :)
-lolcat metrinome_ascii.txt
+if command -v lolcat >/dev/null; then lolcat "$SRC/metrinome_ascii.txt"; else cat "$SRC/metrinome_ascii.txt"; fi
 while :;do
    printf "PRESS THE CORRESPONDING NUMBER TO SEE THE BENCHMARKS FROM THAT PAPER.\n\
    1) ICSE 2021 PAPER\n\
@@ -23,7 +26,7 @@ while :;do
       # check if input in the list and is an integer
       if [[ $paper_dict == *"$paper_num"* && "$paper_num" =~ ^[0-9]+$ ]]; then
          if [[ $paper_num == 5 ]]; then
-            python3 main.py
+            python3 "$SRC/main.py"
             break
          fi
          printf "WHICH METRIC WOULD YOU LIKE TO COMPUTE? \n\
@@ -48,23 +51,23 @@ while :;do
    done
 
    if [[ "$apc_num" == "1" || "$apc_num" == "5" ]]; then
-      python3 /app/code/experiments/function_calls/tests/test_getrgf.py $paper_num "$paper_dict"
+      python3 "$SRC/experiments/function_calls/tests/test_getrgf.py" $paper_num "$paper_dict"
    fi
 
    if [[ "$apc_num" == "2" || "$apc_num" == "5" ]]; then
-      python3 /app/code/experiments/function_calls/tests/test_fcapc.py $paper_num "$paper_dict"
+      python3 "$SRC/experiments/function_calls/tests/test_fcapc.py" $paper_num "$paper_dict"
    fi
 
    if [[ "$apc_num" == "3" || "$apc_num" == "5" ]]; then
-      python3 /app/code/experiments/function_calls/tests/test_rapc.py $paper_num "$paper_dict"
+      python3 "$SRC/experiments/function_calls/tests/test_rapc.py" $paper_num "$paper_dict"
    fi
 
    if [[ "$apc_num" == "4" || "$apc_num" == "5" ]]; then
-      python3 /app/code/experiments/function_calls/tests/test_npath.py $paper_num "$paper_dict"
+      python3 "$SRC/experiments/function_calls/tests/test_npath.py" $paper_num "$paper_dict"
    fi
 
    if [[ "$apc_num" == "5" ]]; then
-      python3 /app/code/experiments/function_calls/tests/mergeData.py
+      python3 "$SRC/experiments/function_calls/tests/mergeData.py"
    fi
 
    printf "\n\nPRESS 1 TO COMPUTE ANOTHER METRIC. OTHERWISE PRESS ANYTHING ELSE TO EXIT.\n"
