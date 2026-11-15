@@ -171,7 +171,7 @@ class KleeUtils:
         cppargs = ['-nostdinc', '-E', '-D__attribute__(x)=', f'-I{Env.fake_libc_include()}']
         if optimized:
             cppargs.insert(0, '-O3')
-        ast = parse_file(filename, use_cpp=True, cpp_path='gcc', cpp_args=cppargs)
+        ast = parse_file(filename, use_cpp=True, cpp_path=Env.clang(), cpp_args=cppargs)
         self._logger.d_msg("Going to visit functions.")
         func_visitor = FuncVisitor(self._logger)
         func_visitor.visit(ast)

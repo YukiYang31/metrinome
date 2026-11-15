@@ -142,8 +142,9 @@ these lookups.
 ### KLEE (`klee/klee_utils.py`, `Command.do_klee*`)
 
 1. `KleeUtils.show_func_defs` parses the C file with pycparser and writes one harness per function. Preprocessing
-   uses gcc with pycparser's fake libc headers and `-D__attribute__(x)=`, because pycparser cannot parse GCC
-   attributes; the harness `#include`s the original file by absolute path, so clang still sees the attributes.
+   uses `Env.clang() -E` (no gcc or `cpp` is required) with pycparser's fake libc headers and `-D__attribute__(x)=`,
+   because pycparser cannot parse GCC attributes. The harness `#include`s the original file by absolute path, so
+   clang still sees the attributes.
 2. `klee_to_bc` pipes each harness through `Env.klee_clang()`. KLEE rejects bitcode from a newer LLVM ("Invalid
    record"), which is why this clang can differ from the C front end's clang.
 3. `klee <name>` keeps the bitcode and KLEE's output in `Env.KLEE_OUT_PATH/<name>/`, and parses KLEE's summary
