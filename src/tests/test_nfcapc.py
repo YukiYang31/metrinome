@@ -64,7 +64,7 @@ class DataCollector:
                         "nfcapc_time": nfcruntime, "longest for nfcapc": get_max_time(nfcapc)[0], "longest time":get_max_time(nfcapc)[1],
                            "numNode": nfcapc["numNodes"], "exception_type": exception_type}
 
-                data = data.append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 # only keep columns graph_name, rapc, fcapc, num_vertices, edge_count, and runtimes
                 data = data[["graph_name", "nfcapc", "nfcapc_time", "longest for nfcapc", "longest time","numNode"]]
 

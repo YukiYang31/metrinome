@@ -238,7 +238,7 @@ def main() -> None:
                        "cyclo": cyclo, "npath": npath, "apc_time": runtime,
                        "exception": ex, "exception_type": exception_type}
 
-            data = data.append(new_row, ignore_index=True)
+            data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
             data.to_csv(Env.project_file("tests/core/final.csv"))
 
 

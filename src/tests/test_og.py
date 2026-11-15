@@ -63,7 +63,7 @@ class DataCollector:
                         "ogapc_time": ogruntime,
                         'longest for og':get_max_time(ogapc)[0],"longest time":get_max_time(ogapc)[1],"exception_type": exception_type}
 
-                data = data.append(new_row, ignore_index = True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 data = data[["graph_name", "ogapc","ogapc_time",'longest for og','longest time']]
 
 

@@ -77,5 +77,5 @@ class DataCollector:
                            "edge_count": graph.graph.edge_count(), "exception": ex,
                            "exception_type": exception_type}
 
-                data = data.append(new_row, ignore_index=True)
+                data = pd.concat([data, pd.DataFrame([new_row])], ignore_index=True)
                 data.to_csv(f"{self.output_path}.csv")
