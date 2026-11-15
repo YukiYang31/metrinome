@@ -265,7 +265,8 @@ def main() -> None:
     except FileNotFoundError:
         pass
 
-    options = REPLOptions("/app/code", parsed_args.debug_mode, parsed_args.poor, parsed_args.recursive_apc, parsed_args.fcapc)
+    options = REPLOptions(os.getcwd(), parsed_args.debug_mode, parsed_args.poor, parsed_args.recursive_apc,
+                          parsed_args.fcapc)
     prompt = Prompt(options)
     prompt.cmdloop(f"{Colors.TITLE.value}" + r"""
 

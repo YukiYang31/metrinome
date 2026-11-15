@@ -1,5 +1,7 @@
 """This class knows how to convert from java source code to graph objects."""
-import os
+import re
+import subprocess
+from functools import cache
 from typing import Optional
 
 from glob2 import glob  # type: ignore
@@ -9,6 +11,16 @@ from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph, Metadata
 from graph.graph import EdgeListGraph
 from lang_to_cfg import converter
+
+
+@cache
+def _javac_release_flags() -> tuple[str, ...]:
+    """Flags making javac emit Java 8 class files, the newest version the CFG extractor's ASM reads."""
+    version = subprocess.run([Env.java("javac"), "-version"], capture_output=True, text=True, check=False)
+    match = re.search(r"javac (\d+)", version.stdout + version.stderr)
+    if match is None or int(match.group(1)) == 1:  # JDK 8 reports "javac 1.8.0_x"
+        return ()
+    return ("--release", "8", "-Xlint:-options")
 
 
 class JavaConvert(converter.ConverterAbstract):
@@ -31,7 +43,7 @@ class JavaConvert(converter.ConverterAbstract):
 
     # pylint: disable=R0201
     def to_graph(self, filename: str, file_extension: str) -> Optional[dict[str, ControlFlowGraph]]:
-        """Create a CFG from a Java source file."""
+        """Create a CFG for every method of every class in a Java source file, .class file, or .jar."""
         Env.clean_temps()
 
         check_ending = filename.endswith('sources') or filename.endswith('javadoc') or \
@@ -42,20 +54,25 @@ class JavaConvert(converter.ConverterAbstract):
         path = ""
         fname = filename + file_extension
         self.logger.v_msg(f"processing {fname}")
+        output_path = Env.get_output_path(fname)
 
         if file_extension == ".jar":
             self.runcmd(f"jar xf {fname}", cwd=self._input_folder)
+            output_path = Env.get_output_path(self._input_folder)
             fname = self._input_folder
             path = f"{self._output_folder}/tmp/*.dot"
 
         if file_extension == ".java":
-            self.runcmd(f"javac {fname} -d {self._input_folder}")
-            name = os.path.basename(filename)
-            fname = f"{self._input_folder}/{name}.class"
+            compiled = subprocess.run([Env.java("javac"), *_javac_release_flags(), fname, "-d", self._input_folder],
+                                      capture_output=True, text=True, check=False)
+            if compiled.returncode != 0:
+                self.logger.e_msg(f"javac failed on {fname}:\n{compiled.stderr}")
+                return None
+            # Analyse every class javac produced, including nested and anonymous ones (Outer$1.class).
+            fname = self._input_folder
 
-        output_path = Env.get_output_path(fname)
-        cmd = f"java -jar {Env.CFG_EXTRACTOR_JAR} -i {fname} -o {output_path}"
-        if (err := self.runcmd(cmd, cwd="/app/code")[1]) is not None:
+        cmd = f"{Env.java('java')} -jar {Env.CFG_EXTRACTOR_JAR} -i {fname} -o {output_path}"
+        if (err := self.runcmd(cmd, cwd=Env.PROJECT_PATH)[1]) is not None:
             error = str(err)
             if "FileNotFoundException" in error:
                 self.logger.e_msg(f"Java was unable to generate {fname}")

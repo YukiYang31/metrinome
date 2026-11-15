@@ -3,9 +3,7 @@
 import os
 import re
 import shlex
-import signal
 import subprocess
-from types import FrameType
 from typing import Optional
 
 import glob2  # type: ignore
@@ -15,6 +13,10 @@ from core.log import Log
 from graph.control_flow_graph import ControlFlowGraph, Metadata
 from graph.graph import EdgeListGraph
 from lang_to_cfg import converter
+
+# Diagnostics that clang 14 reported as warnings but clang 16+ reports as errors by default.
+LEGACY_C_DIAGNOSTICS = ("implicit-function-declaration", "implicit-int", "int-conversion",
+                        "incompatible-function-pointer-types")
 
 
 class CPPConvert(converter.ConverterAbstract):
@@ -133,13 +135,9 @@ class CPPConvert(converter.ConverterAbstract):
             edges += ["1 -> 2;"]
             counter += 2
 
-        # Make a temporary file (with the new content).
+        # Make a temporary file (with the new content), e.g. tmp_dot/<source>_.<function>.dot
         source_name = os.path.basename(filename)
-        # file:/app/code/tmp/cfg._Z7mul_invii.dot
         f_name = os.path.basename(file)
-        # f_name: cfg._Z7mul_invii.dot
-        # with open(Env.TMP_DOT_PATH + "/" + source_name + "_" + f_name, 'w') as new_file:
-        # print(f"OPEN!!! {open(Env.TMP_DOT_PATH + "/" + source_name + "_" + f_name, 'w+')}")
         with open(Env.TMP_DOT_PATH + "/" + source_name + "_" + f_name, 'w+') as new_file:
             new_file.write("digraph { \n")
 
@@ -149,13 +147,10 @@ class CPPConvert(converter.ConverterAbstract):
                     node += " [label=\"EXIT\"]"
                 new_file.write(node + ";" + "\n")
 
+            node_ref = re.compile(r"(Node0x[0-9a-f]+)(?::s\d+)?")
             for edge in edges:
-                for name in node_map:
-                    edge = edge.replace(name, node_map[name])
-                    edge = edge.replace(":s0", "")
-                    edge = edge.replace(":s1", "")
-
-                new_file.write(edge + "\n")
+                # Map LLVM node names to indices and drop record ports (":s0", ":s1", ... one per successor).
+                new_file.write(node_ref.sub(lambda match: node_map[match.group(1)], edge) + "\n")
             new_file.write("}")
             new_file.seek(0)
 
@@ -166,12 +161,13 @@ class CPPConvert(converter.ConverterAbstract):
         Each dot file generated from the .cpp source is converted to the same format
         as the dot files generated from Java CFGs.
         """
-        files = glob2.glob(f"{Env.TMP_PATH}/.*.dot")
-        print("files:", files)
-        for name in files:
+        files = []
+        for name in glob2.glob(f"{Env.TMP_PATH}/.*.dot"):
             if "global" in name.lower():
                 os.remove(name)
-                files.remove(name)
+            else:
+                files.append(name)
+        self.logger.d_msg(f"CFG files: {files}")
 
         for file in files:
             self.convert_file_to_standard(file, filename)
@@ -179,43 +175,32 @@ class CPPConvert(converter.ConverterAbstract):
         return len(files)
 
     def create_dot_files(self, filepath: str, file_extension: str, simplify: bool = False) -> None:
-        """Create a .dot file representing a CFG for each function from a .cpp file."""
+        """Create a .dot file in Env.TMP_PATH representing the CFG of each function in a C/C++ file."""
         # Make sure the file extension begins with a '.'
         if file_extension[0] != '.':
             file_extension = f".{file_extension}"
-        self.logger.d_msg(f"filepath: {filepath}")
-        self.logger.d_msg(f"Going to dir: {os.path.split(filepath)[0]}")
-        os.chdir(os.path.split(filepath)[0])
-
-        # if self._optimize:
-        #     c1_str = f"clang{'++' if file_extension == '.cpp' else ''}-6.0 -emit-llvm -S -O3 {filepath}{file_extension} -o-"
-        # else:
-        #     c1_str = f"clang{'++' if file_extension == '.cpp' else ''}-6.0 -emit-llvm -S {filepath}{file_extension} -o-"
-        # # 2nd half of command: process compiled files to produce dot files using llvm
-        # command = c1_str + " | /usr/lib/llvm-6.0/bin/opt -dot-cfg -disable-output -enable-new-pm=0"
-
-        # ============== NEW CLANG FOR RUNNING WITH DOCKER ==========================================
-        # 1st part of command: compile c files with clang
+        source = f"{filepath}{file_extension}"
+        # At -O0 clang marks every function optnone, and the new pass manager skips its printers on
+        # optnone functions, so drop the attribute. The emitted CFG is otherwise unchanged.
+        # clang 16+ turned these legacy-C diagnostics into errors; keep them warnings, as in clang 14.
+        compile_cmd = [Env.clang(), "-emit-llvm", "-S", "-Xclang", "-disable-O0-optnone",
+                       *(f"-Wno-error={diagnostic}" for diagnostic in LEGACY_C_DIAGNOSTICS),
+                       source, "-o", "-"]
         if self._optimize:
-            c1_str = f"clang{'++' if file_extension == '.cpp' else ''}-14 -emit-llvm -S -O3 {filepath}{file_extension} -o-"
-        else:
-            c1_str = f"clang{'++' if file_extension == '.cpp' else ''}-14 -emit-llvm -S {filepath}{file_extension} -o-"
-        # 2nd half of command: process compiled files to produce dot files using llvm
-        if not simplify:
-            command = c1_str + " | /usr/lib/llvm-14/bin/opt -dot-cfg -disable-output -enable-new-pm=0"
-        #to use pythonBranching:
-        else: 
-            print("with '-simplifycfg' flag")
-            command = c1_str + " | /usr/lib/llvm-14/bin/opt -simplifycfg -dot-cfg -disable-output -enable-new-pm=0"
+            compile_cmd.insert(3, "-O3")
+        # Under the legacy pass manager, -simplifycfg skipped optnone (-O0) functions, so `simplify`
+        # only ever affected -O3 builds. Keep that behavior so published results stay reproducible.
+        passes = "simplifycfg,dot-cfg" if simplify and self._optimize else "dot-cfg"
+        self.logger.d_msg(f"Command: {shlex.join(compile_cmd)} | {Env.opt()} -passes={passes}")
 
-        # ============== NEW CLANG FOR RUNNING WITH DOCKER ==========================================
-
-        self.logger.d_msg(f"Command: {command}")
-        # run command in shell
-        subprocess.run(command,shell=True)
-        # collect resulting dot files
-        files = glob2.glob(".*.dot")
-        print("files before:",files)
-        # move files into our environment
-        for file in files:
-            subprocess.call(["mv", file, Env.TMP_PATH])
+        compiled = subprocess.run(compile_cmd, capture_output=True, text=True, check=False)
+        if compiled.returncode != 0:
+            self.logger.e_msg(f"clang failed on {source}:\n{compiled.stderr}")
+            return
+        if compiled.stderr:
+            self.logger.d_msg(compiled.stderr)
+        # opt writes one ".<function>.dot" file per function into its working directory.
+        printed = subprocess.run([Env.opt(), f"-passes={passes}", "-disable-output"], input=compiled.stdout,
+                                 cwd=Env.TMP_PATH, capture_output=True, text=True, check=False)
+        if printed.returncode != 0:
+            self.logger.e_msg(f"opt failed on {source}:\n{printed.stderr}")
